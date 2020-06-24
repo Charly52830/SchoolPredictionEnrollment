@@ -27,32 +27,6 @@ class TestResult :
         m = Y.shape[0] * Y.shape[1]
         self.Y_hat = np.reshape(prediction, m)
         self.Y = np.reshape(Y, m)
-        
-        """
-        # Gráfica de evaluación
-        self.fig = go.Figure()
-        
-        m = max(np.amax(prediction), np.amax(Y))
-        # Rango de confianza
-        self.fig.add_trace(go.Scatter(
-            x = [0, 10, m + 5, m - 5, 0, 0], 
-            y = [0, 0, m - 5, m + 5, 10, 0], 
-            mode = 'none', fill = 'tonexty', name = 'Rango deseable')
-        )
-        # Rango de confianza
-        self.fig.add_trace(go.Scatter(
-            x = [10, 20, m + 10, m - 10, 0, 0, m - 5, m + 5, 10], 
-            y = [0, 0, m - 10, m + 10, 20, 10, m + 5, m - 5, 0], 
-            mode = 'none', fill = 'tozeroy', name = 'Rango aceptable')
-        )
-        
-        self.fig.update_layout(
-            xaxis_title = 'Valor real',
-            yaxis_title = 'Valor predecido'
-        )
-        self.fig.add_trace(go.Scatter(x = Y, y = prediction, mode = 'markers', name = 'Prediccion'))
-        self.fig.add_trace(go.Scatter(x = [0, m], y = [0, m], mode = 'lines', name = 'Linea base'))    
-        """
 
 class Model :
     """
@@ -119,8 +93,6 @@ class Model :
 
             for i in range(dataset.shape[0]) :
                 row = np.array(dataset.loc[i])
-                
-                print(i, dataset.shape[0])
                 
                 # Separamos los últimos 5 años
                 X = row[: -self.TEST_SIZE]
