@@ -109,6 +109,12 @@ class Model :
         return self.cached_sets[key]
 
 if __name__ == '__main__' :
-    model = Model(fixed_partitioning_predict)
-    result = model.test_set('PrimariasCompletas', 5)
+    dataset = pd.read_csv('PrimariasCompletas.csv')
+    unique_index = pd.Index(list(dataset['cct']))
+    if '32DPR0026X' in unique_index :
+        print('jeje')
+    index = unique_index.get_loc('32DPR0026X')
+    print(index)
+    if '32DPR2447T' in dataset['cct'] :
+        print('jaja')
     
