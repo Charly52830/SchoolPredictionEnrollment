@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import plotly.graph_objects as go
 
 from TimeSeriesPrediction import fixed_partitioning_predict
 
@@ -26,9 +25,10 @@ class TestResult :
         # TO DO: agregar cálculo de probabilidad de riesgo
         
         m = Y.shape[0] * Y.shape[1]
-        prediction = np.reshape(prediction, m)
-        Y = np.reshape(Y, m)
+        self.Y_hat = np.reshape(prediction, m)
+        self.Y = np.reshape(Y, m)
         
+        """
         # Gráfica de evaluación
         self.fig = go.Figure()
         
@@ -52,6 +52,7 @@ class TestResult :
         )
         self.fig.add_trace(go.Scatter(x = Y, y = prediction, mode = 'markers', name = 'Prediccion'))
         self.fig.add_trace(go.Scatter(x = [0, m], y = [0, m], mode = 'lines', name = 'Linea base'))    
+        """
 
 class Model :
     """
