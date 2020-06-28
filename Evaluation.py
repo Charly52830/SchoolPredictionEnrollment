@@ -11,7 +11,9 @@ class TestResult :
         de la predicción para mostrar en Dash.
         
         prediction: numpy array con los datos de la predicción.
+            Cada columna representa una escuela.
         Y: numpy array con los datos reales.
+            Cada columna representa una escuela
         """
         
         assert(len(prediction) == len(Y))
@@ -25,8 +27,8 @@ class TestResult :
         # TO DO: agregar cálculo de probabilidad de riesgo
         
         m = Y.shape[0] * Y.shape[1]
-        self.Y_hat = np.reshape(prediction, m)
-        self.Y = np.reshape(Y, m)
+        self.Y_hat = np.reshape(prediction.T, m)
+        self.Y = np.reshape(Y.T, m)
 
 class Model :
     """
@@ -109,12 +111,8 @@ class Model :
         return self.cached_sets[key]
 
 if __name__ == '__main__' :
-    dataset = pd.read_csv('PrimariasCompletas.csv')
-    unique_index = pd.Index(list(dataset['cct']))
-    if '32DPR0026X' in unique_index :
-        print('jeje')
-    index = unique_index.get_loc('32DPR0026X')
-    print(index)
-    if '32DPR2447T' in dataset['cct'] :
-        print('jaja')
-    
+    # Para efectos de pruebas
+    model = Model(fixed_partitioning_predict)
+    result = model.test_set('DummySet', 2)
+    print(result.Y)
+    print(result.Y_hat)
