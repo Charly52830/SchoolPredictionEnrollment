@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 
 from TimeSeriesPrediction import fixed_partitioning_predict
+from MyUtilities import LoadHTMLTable
 
 class TestResult :
     
@@ -15,16 +16,24 @@ class TestResult :
         Y: numpy array con los datos reales.
             Cada columna representa una escuela
         """
-        
-        assert(len(prediction) == len(Y))
-        
-        # Mean absolute error
-        self.mae = np.abs(prediction - Y).mean()
-        
-        # Mean absolute percentage error
-        self.mape = np.abs( (prediction - Y) / Y).mean()
-        
-        # TO DO: agregar cálculo de probabilidad de riesgo
+
+        self.metricas = []
+        for i in range(prediction.shape[0]) :
+            tmp_pred = prediction[i]
+            tmp_Y = Y[i]
+
+            # Mean absolute error
+            mae = np.abs(tmp_pred - tmp_Y).mean()
+
+            # Root mean squared error
+            rmse = np.sqrt(np.square(tmp_pred - tmp_Y).mean())
+
+            # Mean absolute percentage error
+            mape = np.abs((tmp_pred - tmp_Y) / tmp_Y).mean()
+            
+            # TO DO: agregar cálculo de probabilidad de riesgo
+            
+            self.metricas.append((mae, rmse, mape))
         
         m = Y.shape[0] * Y.shape[1]
         self.Y_hat = np.reshape(prediction.T, m)
@@ -113,6 +122,5 @@ class Model :
 if __name__ == '__main__' :
     # Para efectos de pruebas
     model = Model(fixed_partitioning_predict)
-    result = model.test_set('DummySet', 2)
-    print(result.Y)
-    print(result.Y_hat)
+    result = model.test_set('DummySet', 5)
+    print(LoadHTMLTable(result.metricas, 'Fix. Part. Time series'))

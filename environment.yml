@@ -11,3 +11,5 @@ dependencies:
     - sklearn
     - tensorflow
     - bqplot
+    - datapane
+
