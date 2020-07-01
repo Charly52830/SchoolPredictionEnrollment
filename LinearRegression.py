@@ -14,7 +14,7 @@ def linear_regression(Y, window_len, prediction_size) :
 		prediction[len(Y) + j] = y_pred[-1]
 	
 	return prediction[-prediction_size :]
-
+	
 def best_prediction(X, Y, verbose = False) :
 	validation_size = len(Y)
 	train_size = len(X)
@@ -50,6 +50,9 @@ def linear_regression_predict(data, prediction_size, validation_size = 1, verbos
 	)
 	
 	return linear_regression(data, window_len, prediction_size)
+
+def base_linear_regression(data, prediction_size) :
+	return linear_regression(data, len(data), prediction_size)
 
 if __name__ == '__main__' :
 	#print(linear_regression_prediction(np.array([89,127,134,152,170,172,182,192,197,210,219,222,232,226,222,205]), 3, 1, True))
