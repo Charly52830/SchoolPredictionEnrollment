@@ -80,10 +80,5 @@ def create_model(dataset_name, window_len, test_size, Y_size = 1, model_name = '
 	print("Modelo %s guardado en el dorectorio ModelosDNN" % (model_name))
 
 if __name__ == "__main__" :
-	create_model(
-		dataset_name = 'PrimariasCompletas',
-		window_len = 5,
-		test_size = 0,
-		Y_size = 1,
-		model_name = 'ProduccionPrimarias'
-	)
+	# Aquí van las pruebas
+	pass
