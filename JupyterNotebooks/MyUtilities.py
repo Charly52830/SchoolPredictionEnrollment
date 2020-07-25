@@ -11,7 +11,25 @@ from bqplot import (ColorScale, DateColorScale, OrdinalColorScale,
                     LinearScale, Tooltip)
 from ipywidgets import interact, interactive, fixed, interact_manual
 
+# El propósito de las funciones de utilidad es ocultar código extenso, necesario
+# para los notebooks. No proporcionan ningún uso para ambientes de producción.
+
 def LoadReport(title, X, Y, prediccion, anios) :
+    """ Función de utilidad para generar el reporte en Datapane. Crea una tabla
+    que contiene los valores de las predicciones, así como las métricas con las
+    que se evalúan los modelos. También contiene una gráfica de puntos con los 
+    valores de la predicción.
+    
+    Args:
+        title (str): titulo del reporte de datapane.
+        X (:obj: `numpy.array`): datos reales de prueba.
+        Y (:obj: `numpy.array`): datos reales de predicción.
+        prediccion (:obj: `numpy.array`): datos predecidos.
+        anios (int): número de años que se predijeron.
+       
+    Returns:
+        (:obj: `datapane.Report`): reporte de datapane listo para publicar o guardar.
+    """
     anios_ = [1998 + i for i in range(len(X))]
     n1 = len(anios_)
     anios_ += [1997 + len(X) + i  for i in range(len(Y) + 1)]
@@ -37,13 +55,10 @@ def LoadReport(title, X, Y, prediccion, anios) :
     columns += ['MAPE', 'MAE', 'RMSE']
     
     metricas = np.zeros(3)
-    
-     # MAPE
+    # MAPE
     metricas[0] = np.abs((prediccion - Y) / Y).mean()
-    
     # MAE
     metricas[1] = np.abs(prediccion - Y).mean()
-    
     # RMSE
     metricas[2] = np.sqrt(np.square(prediccion - Y).mean())
     
@@ -63,10 +78,17 @@ def LoadReport(title, X, Y, prediccion, anios) :
     
     # Crear reporte
     reporte = dp.Report(dp.Table(metricas), dp.Plot(chart))
-    
     return reporte
     
 def LoadScatterPlotEvaluation(Y, Y_hat, prediction_size) :
+    """Prepara debajo de la celda una gráfica para observar visualmente el
+    resultado de una predicción.
+    
+    Args :
+        Y (:obj: `numpy.array`): datos reales.
+        Y_hat (:obj: `numpy.array`): datos predecidos.
+        prediction_size (int): número de años predecidos.
+    """
     n = int(Y.shape[0] / prediction_size)
     colors = []
     if prediction_size >= 1:
@@ -97,6 +119,16 @@ def LoadScatterPlotEvaluation(Y, Y_hat, prediction_size) :
     )
 
 def LoadEvaluationPlot(result, prediction_size, conjunto, modelo) :
+    """Prepara debajo de la celda una gráfica que detalla visualmente el resultado
+    de la evaluación de un conjunto de datos utilizando un modelo específico.
+    
+    Args:
+        result (:obj: `TestResult`): instancia de TestResult con los resultados
+            de la evaluación.
+        prediction_size (int): número de años predecidos
+        conjunto (str): conjunto de datos evaluado.
+        modelo (str): método de predicción utilizado.
+    """
     n = int(result.Y.shape[0] / prediction_size)
     m = max(np.amax(result.Y_hat), np.amax(result.Y))
 
@@ -136,8 +168,6 @@ def LoadEvaluationPlot(result, prediction_size, conjunto, modelo) :
         axes_options=axes_options
     )
 
-    #LoadScatterPlotEvaluation(result.Y, result.Y_hat, prediction_size)
-
     plt.plot(
         x = np.array([0, m]), 
         y = np.array([0, m]), 
@@ -146,54 +176,62 @@ def LoadEvaluationPlot(result, prediction_size, conjunto, modelo) :
     )
 
 def LoadHTMLTable(metricas, modelo) :
-	
-	def load_header(anios) :
-		header = ''
-		for i in range(anios) :
-			header += '<th colspan="3" style="text-align:center"> Año %s </th>\n' % (i + 1)
-		return header
-	
-	def load_metrics_row(anios) :
-		return '<td colspan="3" style="text-align:center">Métricas</td>\n' * anios
-	
-	def load_individual_metrics(anios) :
-		return """
-			<td>MAE</td>
-			<td>RMSE</td>
-			<td>MAPE</td>
-		""" * anios
-	def load_table_data(metricas, modelo) :
-		row = '<td> %s </td>' % (modelo)
-		for metrica in metricas :
-			row += """
-				<td> %.3f </td>
-				<td> %.3f </td>
-				<td> %.3f </td>
-			""" % (metrica[0], metrica[1], metrica[2])
-		return row
-	
-	anios = len(metricas)
-	table = """
-		<table>
-			<tr>
-				<th rowspan='3' style="text-align:center">
-					Modelo
-				</th>
-				%s
-			</tr>
-			<tr>
-				%s
-			</tr>
-			<tr>
-				%s
-			</tr>
-			<tr>
-				%s
-			</tr>
-		</table>
-	""" % (load_header(anios), load_metrics_row(anios), load_individual_metrics(anios), load_table_data(metricas, modelo))
-	
-	return table
-		
-		
-		
+    """Carga el código HTML necesario para mostrar debajo de la celda una gráfica
+    que contiene las métricas de evaluación por año predecido.
+    
+    Args:
+        metricas (list): lista bidimensional con las métricas de evaluación por
+            cada año de predicción.
+        modelo (str): modelo de predicción utilizado para la evaluación.
+        
+    Returns:
+        str: string con el código HTML de la tabla.
+    """
+    
+    def load_header(anios) :
+        header = ''
+        for i in range(anios) :
+            header += '<th colspan="3" style="text-align:center"> Año %s </th>\n' % (i + 1)
+        return header
+    
+    def load_metrics_row(anios) :
+        return '<td colspan="3" style="text-align:center">Métricas</td>\n' * anios
+    
+    def load_individual_metrics(anios) :
+        return """
+            <td>MAE</td>
+            <td>RMSE</td>
+            <td>MAPE</td>
+        """ * anios
+    def load_table_data(metricas, modelo) :
+        row = '<td> %s </td>' % (modelo)
+        for metrica in metricas :
+            row += """
+                <td> %.3f </td>
+                <td> %.3f </td>
+                <td> %.3f </td>
+            """ % (metrica[0], metrica[1], metrica[2])
+        return row
+    
+    anios = len(metricas)
+    table = """
+        <table>
+            <tr>
+                <th rowspan='3' style="text-align:center">
+                    Modelo
+                </th>
+                %s
+            </tr>
+            <tr>
+                %s
+            </tr>
+            <tr>
+                %s
+            </tr>
+            <tr>
+                %s
+            </tr>
+        </table>
+    """ % (load_header(anios), load_metrics_row(anios), load_individual_metrics(anios), load_table_data(metricas, modelo))
+    
+    return table	

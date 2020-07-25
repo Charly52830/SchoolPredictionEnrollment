@@ -2,24 +2,25 @@ import numpy as np
 import pandas as pd
 
 def time_series_prediction(train_Y, steps, SEASONAL_LAG, WINDOW_LEN) :
-	"""
-	Algoritmo de predicción de una serie de tiempo. Utiiliza el promedio de
+	"""Algoritmo de predicción de una serie de tiempo. Utiiliza el promedio de
 	la diferencia de valores pasados más un valor anterior en la serie de tiempo.
 	
-	Funciona en O(n) utilizando recursividad con 3 funciones.
+	Se ejecuta en O(n) utilizando recursividad con 3 funciones.
 	
-	Puede mejorarse si se suma el promedio de una ventana de longitud WINDOW_LEN
-	centrada en la posición i - SEASONAL_LAG. Esto puede contribuir a reducir el
-	ruido en la predicción.
+	Puede mejorarse la precisión si se suma el promedio de una ventana de 
+	longitud WINDOW_LEN centrada en la posición i - SEASONAL_LAG. Esto puede 
+	contribuir a reducir el ruido en la predicción.
 	
-	Parámetros:
-		train_Y: valores de entrenamiento de la serie de tiempo.
-		steps: número de valores a predecir.
+	Args:
+		train_Y (:obj: `numpy.array`): valores de entrenamiento de la serie de tiempo.
+		steps (int): número de valores a predecir.
 		SEASONAL_LAG: controla el número anterior del valor de la serie de tiempo
-		a sumar.
+			a sumar.
 		WINDOW_LEN: longitud del promedio de la diferencia de los últimos valores.
 	
-	return: lista de python (NO np array) de longitud steps con los valores predecidos.
+	Returns: 
+		list: lista de python (NO NUMPY ARRAY) de longitud steps con los valores 
+		predecidos.
 	"""
 	
 	N = len(train_Y)
@@ -60,24 +61,23 @@ def time_series_prediction(train_Y, steps, SEASONAL_LAG, WINDOW_LEN) :
 	return prediction
 
 def best_prediction(X, Y, verbose = False) :
-	"""
-	Algoritmo de optimización de series de tiempo que consiste en probar todas
+	"""Algoritmo de optimización de series de tiempo que consiste en probar todas
 	las posibles combinaciones de pares de WINDOW_LEN y SEASONAL_LAG. Los
 	modelos son comparados utilizando Mean Absolute Error.
 	
 	Trabaja en O(n^3) donde n es la longitud del segmento de entrenamiento,
 	(puede optimizarse a O(n^2)).
 	
-	Parámetros:
-		X: segmento de entrenamiento de la serie de tiempo.
-		Y: segmento de validación de la serie de tiempo.
-		verbose: especifica si quieres imprimir en pantalla el resultado de las
-		pruebas.
+	Args:
+		X (:obj: `numpy.array`): segmento de entrenamiento de la serie de tiempo.
+		Y (:obj: `numpy.array`): segmento de validación de la serie de tiempo.
+		verbose (bool): especifica si quieres imprimir en pantalla el resultado 
+		de las pruebas.
 	
 	Return:
-		best_seasonal_lag: valor del seasonal lag con el que se obtuvo menor error.
-		best_window_len: valor de window_len con el que se obtuvo menor error.
-		best_prediction: mejor predicción del segmento de validación.
+		best_seasonal_lag (int): valor del seasonal lag con el que se obtuvo menor error.
+		best_window_len (int): valor de window_len con el que se obtuvo menor error.
+		best_prediction (float): mejor predicción del segmento de validación.
 	"""
 	
 	validation_size = len(Y)
@@ -106,18 +106,19 @@ def best_prediction(X, Y, verbose = False) :
 	return (best_seasonal_lag, best_window_len, best_prediction)
 
 def fixed_partitioning_predict(data, prediction_size, validation_size = 1, verbose = False) :
-	"""
-	Predicción de una serie de tiempo utilizando estadística y fuerza bruta como
+	"""Predicción de una serie de tiempo utilizando estadística y fuerza bruta como
 	algoritmo de optimización.
 	
-	Parámetros:
-		data: numpy array con los valores de la serie de tiempo.
-		validation_size: longitud del segmento de validación.
-		prediction_size: número de valores que quiere predecir.
-		verbose: especifica si quiere imprimir en pantalla los resultados del
-		algoritmo optimizador.
+	Args:
+		data (:obj: `numpy.array`): numpy array con los valores de la serie de tiempo.
+		validation_size (int): longitud del segmento de validación.
+		prediction_size (int): número de valores que quiere predecir.
+		verbose (bool): especifica si quiere imprimir en pantalla los resultados del
+			algoritmo optimizador.
 	
-	return: np array de tamaño prediction_size con la mejor predicción que encontró.
+	Returns: 
+		(:obj: `numpy.array`): numpy array de tamaño prediction_size con la mejor 
+		predicción que encontró.
 	"""
 	
 	x_train = data[: -validation_size]
