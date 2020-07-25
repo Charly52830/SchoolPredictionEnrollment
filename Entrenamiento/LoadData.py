@@ -95,4 +95,5 @@ def loadData(dataset_name, window_len, test_size, Y_size, drop_columns = 0, shuf
 	return (x_train, y_train, x_test, y_test)
 	
 if __name__ == '__main__' :
-	loadData('PrimariasPrivadas', 5, 0, 1)
+	# Aquí van las pruebas
+	pass

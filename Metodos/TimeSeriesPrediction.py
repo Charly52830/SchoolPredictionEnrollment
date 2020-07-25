@@ -133,4 +133,5 @@ def fixed_partitioning_predict(data, prediction_size, validation_size = 1, verbo
 	return np.array(time_series_prediction(data, prediction_size, seasonal_lag, window_len))	
 
 if __name__ == '__main__' :
-	main('PrimariasCompletas.csv', 1, 1)
+	# Aquí van las pruebas
+	pass

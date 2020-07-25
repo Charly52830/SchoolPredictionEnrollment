@@ -131,4 +131,5 @@ def base_linear_regression(data, prediction_size, window_len = -1) :
 	return y_pred
 
 if __name__ == '__main__' :
-	base_linear_regression(np.array([61,61,63,77,69,84,88,74,96,93,75,82,77,88,93,91,95,88,89,98,90,87]), 5, 8)
+	# Aquí van las pruebas
+	pass

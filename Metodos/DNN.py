@@ -114,7 +114,5 @@ def dnn_predict_by_year(data, prediction_size, cached_model = None) :
 	return prediction[0]
 
 if __name__ == "__main__" :
-	escuela = np.array([89,127,134,152,170,172,182,192,197,210,219,222,232,226,222,205,222,229,241,275,330,357])
-	escuela2 = np.array([99,88,81,77,77,73,67,69,70,63,60,65,63,65,67,65,67,69,70,73,77,72])
-	print(dnn_predict(escuela, 5, cached_model = load_model('ProduccionPrimarias')))
-	print(dnn_predict(escuela2, 5, cached_model = load_model('ProduccionPrimarias')))
+	# Aquí van las pruebas
+	pass

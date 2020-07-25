@@ -125,54 +125,5 @@ def PrepararProyeccion(data, prediction_size, title, cct, metodo, args = dict())
 	return (row, dp.Plot(chart))
 
 if __name__ == '__main__':
-	proyecciones = []
-	
-	proyecciones.append(PrepararProyeccion(
-		data = np.array([61,61,63,77,69,84,88,74,96,93,75,82,77,88,93,91,95,88,89,98,90,87]),
-		prediction_size = 5,
-		title = "Proyección de matrícula de 32DJN0243V utilizando Fix. part. linear regression",
-		cct = "32DJN0243V",
-		metodo = base_linear_regression,
-		args = dict(window_len = 8)
-	))
-	proyecciones.append(PrepararProyeccion(
-		data = np.array([40,51,56,35,44,48,63,84,64,73,79,80,78,86,78,88,84,88,73,76,79,86]),
-		prediction_size = 5,
-		title = "Proyección de matrícula de 32DJN0254A utilizando Fix. part. linear regression",
-		cct = "32DJN0254A",
-		metodo = base_linear_regression,
-		args = dict(window_len = 8)
-	))
-	proyecciones.append(PrepararProyeccion(
-		data = np.array([199,181,171,176,166,157,154,162,193,179,204,223,241,257,244,260,242,245,237,223,229,220]),
-		prediction_size = 5,
-		title = "Proyección de matrícula de 32DPR0475B utilizando Redes neuronales",
-		cct = "32DPR0475B",
-		metodo = base_linear_regression,
-		args = dict(window_len = 8)
-	))
-	proyecciones.append(PrepararProyeccion(
-		data = np.array([175,179,181,183,188,192,180,200,209,207,215,239,239,239,241,241,218,215,208,213,213,231]),
-		prediction_size = 5,
-		title = "Proyección de matrícula de 32DPR0477Z utilizando Redes neuronales",
-		cct = "32DPR0477Z",
-		metodo = base_linear_regression,
-		args = dict(window_len = 8)
-	))
-	proyecciones.append(PrepararProyeccion(
-		data = np.array([40,46,34,40,49,52,43,45,48,55,73,66,69,62,79,85,87,94,98,85,71,80]),
-		prediction_size = 5,
-		title = "Proyección de matrícula de 32ETV0109D utilizando Fix. part. linear regression",
-		cct = "32ETV0109D",
-		metodo = base_linear_regression,
-		args = dict(window_len = 8)
-	))
-	proyecciones.append(PrepararProyeccion(
-		data = np.array([56,53,52,56,64,69,58,60,50,55,52,56,58,67,86,87,113,123,111,98,110,100]),
-		prediction_size = 5,
-		title = "Proyección de matrícula de 32ETV0248E utilizando Fix. part. linear regression",
-		cct = "32ETV0248E",
-		metodo = base_linear_regression,
-		args = dict(window_len = 8)
-	))
-	PublicarReporte(proyecciones, 'ReporteEjidalRegresionLineal', 27)
+	# Aquí van las pruebas
+	pass

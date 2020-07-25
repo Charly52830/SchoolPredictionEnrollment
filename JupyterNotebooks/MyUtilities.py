@@ -234,4 +234,8 @@ def LoadHTMLTable(metricas, modelo) :
         </table>
     """ % (load_header(anios), load_metrics_row(anios), load_individual_metrics(anios), load_table_data(metricas, modelo))
     
-    return table	
+    return table
+
+if __name__ == '__main__' :
+    # Aquí van las pruebas
+	pass

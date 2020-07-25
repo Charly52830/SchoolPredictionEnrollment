@@ -149,6 +149,5 @@ class Model :
         return self.cached_sets[key]
 
 if __name__ == '__main__' :
-    # Para efectos de pruebas
-    model = Model(fixed_partitioning_predict)
-    result = model.test_set('DummySet', 5)
+    # Aquí van las pruebas
+	pass

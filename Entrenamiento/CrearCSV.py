@@ -151,6 +151,5 @@ def filterData(csv_file, save_as, custom_function) :
 	print('Archivo guardado como', save_as + '.csv')
 	
 if __name__ == '__main__' :
-	crearCSV('PrimariasPublicas')
-	cleanData('PrimariasPublicas')
-
+	# Aquí van las pruebas
+	pass
