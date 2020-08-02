@@ -1,9 +1,7 @@
 import pandas as pd
 import numpy as np
 import bqplot.pyplot as plt
-import tensorflow as tf
-from IPython.display import display, HTML, IFrame
-import ipywidgets as widgets
+from IPython.display import display
 import altair as alt
 import datapane as dp
 
@@ -191,31 +189,34 @@ def LoadHTMLTable(metricas, modelo) :
     def load_header(anios) :
         header = ''
         for i in range(anios) :
-            header += '<th colspan="3" style="text-align:center"> Año %s </th>\n' % (i + 1)
+            header += '<th colspan="4" style="text-align:center; border: 1px solid black;"> Año %s </th>\n' % (i + 1)
         return header
     
     def load_metrics_row(anios) :
-        return '<td colspan="3" style="text-align:center">Métricas</td>\n' * anios
+        return '<td colspan="4" style="text-align:center; border: 1px solid black;">Métricas</td>\n' * anios
     
     def load_individual_metrics(anios) :
         return """
-            <td>MAE</td>
-            <td>RMSE</td>
-            <td>MAPE</td>
+            <td style="border: 1px solid black;">MAE</td>
+            <td style="border: 1px solid black;">RMSE</td>
+            <td style="border: 1px solid black;">MAPE</td>
+            <td style="border: 1px solid black;">RP</td>
         """ * anios
     def load_table_data(metricas, modelo) :
-        row = '<td> %s </td>' % (modelo)
+        row = '<td style="border: 1px solid black;"> %s </td>' % (modelo)
         for metrica in metricas :
             row += """
-                <td> %.3f </td>
-                <td> %.3f </td>
-                <td> %.3f </td>
-            """ % (metrica[0], metrica[1], metrica[2])
+                <td style="border: 1px solid black;"> %.3f </td>
+                <td style="border: 1px solid black;"> %.3f </td>
+                <td style="border: 1px solid black;"> %.3f </td>
+                <td style="border: 1px solid black;"> %.3f </td>
+            """ % (metrica[0], metrica[1], metrica[2], metrica[3])
         return row
     
     anios = len(metricas)
     table = """
-        <table>
+    <div style="overflow-x:auto;">
+        <table style="border: 1px solid black; border-collapse: collapse;">
             <tr>
                 <th rowspan='3' style="text-align:center">
                     Modelo
@@ -232,10 +233,10 @@ def LoadHTMLTable(metricas, modelo) :
                 %s
             </tr>
         </table>
+    </div>
     """ % (load_header(anios), load_metrics_row(anios), load_individual_metrics(anios), load_table_data(metricas, modelo))
     
     return table
 
 if __name__ == '__main__' :
-    # Aquí van las pruebas
-	pass
+    pass

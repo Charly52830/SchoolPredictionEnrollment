@@ -1,0 +1,4 @@
+https://orientdb.org/docs/2.0/orientdb.wiki/OrientDB-REST.html#function
+wget --user=charly --password='PASSWORD' http://e.seduzac.microbit.com:2480/function/fution/matriculaCompleta
+wget --user=charly --password='PASSWORD' http://e.seduzac.microbit.com:2480/function/fution1_1/matriculaCompletaPrimaria
+wget --user=charly --password='PASSWORD' http://e.seduzac.microbit.com:2480/function/fution1_1/matriculaCompletaPrimaria/PRIVADO

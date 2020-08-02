@@ -13,9 +13,9 @@ class TestResult :
     Model genera instancias de esta clase cada vez que se ejecuta una evaluación.
     """
     
-    def __init__(self, prediction, Y) :
+    def __init__(self, prediction, Y, groups) :
         """Constructor de la clase TestResult. Prepara los parámetros del resultado
-        de la predicción para mostrar en Dash.
+        de la predicción para mostrar en Jupyter.
         
         Las métricas que calcula son las siguientes:
         - Mean absolute error
@@ -29,15 +29,17 @@ class TestResult :
                 representa un año.
             Y (:obj: `numpy.array`): numpy array con los datos reales. Cada 
                 columna representa una escuela, cada fila representa un año.
+            groups (:obj: `numpy.array`): numpy array con los datos de los grupos. 
+                Cada columna representa una escuela, cada fila representa un año.
+                Este parámetro es utilizado para el cálculo de la Probabilidad de
+                riesgo.
         """
         
-        # Nota importante (25/07/2020)
-        # La métrica de probabilidad de riesgo aún no está implementada
-
         self.metricas = []
         for i in range(prediction.shape[0]) :
             tmp_pred = prediction[i]
             tmp_Y = Y[i]
+            tmp_group = groups[i]
 
             # Mean absolute error
             mae = np.abs(tmp_pred - tmp_Y).mean()
@@ -48,9 +50,10 @@ class TestResult :
             # Mean absolute percentage error
             mape = np.abs((tmp_pred - tmp_Y) / tmp_Y).mean()
             
-            # TO DO: agregar cálculo de probabilidad de riesgo
+            # Probabilidad de riesgo
+            pr = (np.abs(np.abs(tmp_pred - tmp_Y)) >= tmp_Y / tmp_group).mean()
             
-            self.metricas.append((mae, rmse, mape))
+            self.metricas.append((mae, rmse, mape, pr))
         
         m = Y.shape[0] * Y.shape[1]
         self.Y_hat = np.reshape(prediction.T, m)
@@ -99,7 +102,7 @@ class Model :
         
         return self.model_function(**self.args)
     
-    def test_set(self, dataset_name, prediction_size) :
+    def test_set(self, dataset_name, prediction_size, group_dataset) :
         """Método que evalúa un conjunto de datos con el modelo que guarda
         esta clase.
         
@@ -107,6 +110,8 @@ class Model :
             dataset_name (str): nombre del conjunto a evaluar. Los conjuntos de
                 datos se encuentran en el directorio Datasets con extensión .csv.
             prediction_size (int): número de años a predecir.
+            group_dataset (str): nombre del dataset que contiene el número de grupos
+                para cada cct del dataset a evaluar.
         
         Returns:
             (:obj: `TestResult`): instancia de la clase TestResult con los 
@@ -120,11 +125,40 @@ class Model :
         if key not in self.cached_sets :
 
             dataset = pd.read_csv(os.path.join(
-				os.path.dirname(__file__), 
-				os.pardir, 
-				'Datasets/', 
-				dataset_name + '.csv'
-			))
+                os.path.dirname(__file__), 
+                os.pardir, 
+                'Datasets/', 
+                dataset_name + '.csv'
+            ))
+            
+            # Ŷ
+            prediction_data = np.zeros((prediction_size, dataset.shape[0]))
+            # Y
+            real_data = np.zeros((prediction_size, dataset.shape[0]))
+            # Grupos
+            group_data = np.zeros((prediction_size, dataset.shape[0]))
+            
+            grupos = pd.read_csv(os.path.join(
+                os.path.dirname(__file__),
+                os.pardir,
+                'Datasets/',
+                group_dataset + '.csv'
+            ))
+            unique_index = pd.Index(list(grupos['cct']))
+            
+            # Preparar matriz de grupos para probabilidad de riesgo
+            for i in range(dataset.shape[0]) :
+                # Encontrar cct en dataset de grupos
+                cct = dataset["cct"][i]
+                
+                if cct in unique_index :
+                    index = unique_index.get_loc(cct)
+                    col = np.array(grupos.loc[index][1:])
+                    group_data[:, i] = col[-prediction_size:]
+                else :
+                    # Inf broadcasting
+                    group_data[:, i] = 1e9
+            
             dataset = dataset.drop('cct', 1)
 
             #m = prediction_size * dataset.shape[0]  # Número total de predicciones
@@ -145,9 +179,8 @@ class Model :
                 prediction_data[:, i] = self.predict(X, prediction_size)
                 real_data[:, i] = Y
                 
-            self.cached_sets[key] = TestResult(prediction_data, real_data)
+            self.cached_sets[key] = TestResult(prediction_data, real_data, group_data)
         return self.cached_sets[key]
 
 if __name__ == '__main__' :
-    # Aquí van las pruebas
     pass

@@ -69,7 +69,8 @@ def crearCSV(dataset_name) :
 			for i in range(num_anios) :
 				anio = 1998 + i
 				if anio == 2010 :
-					alumnos[i] = linear_regression_predict(alumnos[:12], 1)[0]
+					#alumnos[i] = linear_regression_predict(alumnos[:12], 1)[0]
+					alumnos[i] = alumnos[i - 1]
 				elif str(anio) in escuela :
 					alumnos[i] = int(escuela[str(anio)])
 			
@@ -97,6 +98,15 @@ def cleanData(dataset_name) :
 			row = np.array(dataset.loc[i])
 			cct = row[0]
 			row = row[1:]
+			
+			# Para grupos
+			"""
+			for j in range(1, len(row)) :
+				if row[j] == 0 :
+					row[j] = row[j - 1]
+			"""
+			
+			# Para alumnos
 			zero_index = np.where(row == 0)[0]
 			
 			if len(zero_index) == 1 :
@@ -109,6 +119,7 @@ def cleanData(dataset_name) :
 				writer.writerow(np.concatenate((np.array([cct]), row)))
 			else :
 				remove_counter += 1
+			
 	
 	print("Dataset limpiado. Archivo %s guardado en el directorio Datasets" % ('Clean' + dataset_name + '.csv'))
 	print("Registros eliminados: %d" % (remove_counter))
@@ -151,5 +162,4 @@ def filterData(csv_file, save_as, custom_function) :
 	print('Archivo guardado como', save_as + '.csv')
 	
 if __name__ == '__main__' :
-	# Aquí van las pruebas
 	pass
