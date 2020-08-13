@@ -51,7 +51,11 @@ class TestResult :
             mape = np.abs((tmp_pred - tmp_Y) / tmp_Y).mean()
             
             # Probabilidad de riesgo
-            pr = (np.abs(np.abs(tmp_pred - tmp_Y)) >= tmp_Y / tmp_group).mean()
+            # Alternativa A de la Probabilidad de riesgo
+            #pr = (np.abs(np.abs(tmp_pred - tmp_Y)) >= tmp_Y / tmp_group).mean()
+            
+            # Alternativa B de la probabilidad de riesgo
+            pr = (np.abs(tmp_pred - tmp_Y) >= tmp_group).mean()
             
             self.metricas.append((mae, rmse, mape, pr))
         
@@ -154,7 +158,14 @@ class Model :
                 if cct in unique_index :
                     index = unique_index.get_loc(cct)
                     col = np.array(grupos.loc[index][1:])
-                    group_data[:, i] = col[-prediction_size:]
+                    # Alternativa A de Probabilidad de riesgo
+                    #group_data[:, i] = col[-prediction_size:]
+                    
+                    # Alternativa B de Probabilidad de riesgo
+                    # Alumnos de escuela
+                    alumnos = np.array(dataset.loc[i])[1:]
+                    # Broadcasting del promedio del promedio de alumnos por grupo
+                    group_data[:, i] = (alumnos[:-self.TEST_SIZE] / col[:-self.TEST_SIZE]).mean()
                 else :
                     # Inf broadcasting
                     group_data[:, i] = 1e9
@@ -183,4 +194,9 @@ class Model :
         return self.cached_sets[key]
 
 if __name__ == '__main__' :
-    pass
+    m = Model(linear_regression_predict)
+    m.test_set(
+        dataset_name = 'DummySet',
+        prediction_size = 5,
+        group_dataset = 'GruposPrimaria'
+    )

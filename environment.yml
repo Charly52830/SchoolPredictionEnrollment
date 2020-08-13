@@ -12,4 +12,6 @@ dependencies:
     - tensorflow
     - bqplot
     - datapane
+    - pmdarima
+
 
