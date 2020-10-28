@@ -119,11 +119,43 @@ def cleanData(dataset_name) :
 				writer.writerow(np.concatenate((np.array([cct]), row)))
 			else :
 				remove_counter += 1
-			
 	
 	print("Dataset limpiado. Archivo %s guardado en el directorio Datasets" % ('Clean' + dataset_name + '.csv'))
 	print("Registros eliminados: %d" % (remove_counter))
 	print("Registros totales finales: %d" % (dataset.shape[0] - remove_counter))
+
+def differencing_transform(data) :
+	"""Función que aplica differencing de grado 1 a un numpy array
+	
+	Args:
+		data (:obj: `numpy.array`): arreglo numpy al que se le aplica differencing
+	
+	Returns:
+		(:obj: `numpy.array`): arreglo numpy con differencing aplicado
+	
+	"""
+	n = len(data) - 1
+	new_data = np.zeros(n)
+	for i in range(n - 1, -1, -1) :
+		new_data[i] = data[i + 1] - data[i]
+	
+	return new_data.astype(np.int32)
+
+def apply_differencing(dataset_name) :
+	dataset = pd.read_csv(find_dataset(dataset_name))
+	num_anios = dataset.shape[1] - 2
+	
+	with open(find_dataset('Differenced' + dataset_name), mode = 'w') as archivo :
+		writer = csv.writer(archivo, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+		writer.writerow(["cct"] + [1999 + i for i in range(num_anios)])
+		
+		for i in range(dataset.shape[0]) :
+			row = np.array(dataset.loc[i])
+			cct = row[0]
+			row = differencing_transform(row[1:])
+			writer.writerow(np.concatenate((np.array([cct]), row)))
+	
+	print('Archivo guardado como %s en el directorio de datasets' % ('Differenced' + dataset_name + '.csv'))
 
 def sortData(csv_file, save_as, reverse = False) :
 	dataset = pd.read_csv(csv_file)
@@ -162,4 +194,4 @@ def filterData(csv_file, save_as, custom_function) :
 	print('Archivo guardado como', save_as + '.csv')
 	
 if __name__ == '__main__' :
-	pass
+	apply_differencing('PrimariasPublicas')

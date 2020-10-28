@@ -7,6 +7,8 @@ sys.path.append(parentdir)
 import numpy as np
 import pandas as pd
 from Metodos.LinearRegression import linear_regression_predict
+from Metodos.NaiveForecasting import naive_forecasting_predict
+from Metodos.DNN import dnn_predict, load_model
 
 class TestResult :
     """Clase que contiene los resultados de las métricas de evaluación. La clase
@@ -105,7 +107,7 @@ class Model :
         self.args['data'] = data
         
         return self.model_function(**self.args)
-    
+       
     def test_set(self, dataset_name, prediction_size, group_dataset) :
         """Método que evalúa un conjunto de datos con el modelo que guarda
         esta clase.
@@ -121,13 +123,11 @@ class Model :
             (:obj: `TestResult`): instancia de la clase TestResult con los 
                 resultados de la evaluación.
         """
-        
         assert(prediction_size <= self.TEST_SIZE)
         
         key = '%s_%d' % (dataset_name, prediction_size)
-        
         if key not in self.cached_sets :
-
+            # Cargar dataset en memoria
             dataset = pd.read_csv(os.path.join(
                 os.path.dirname(__file__), 
                 os.pardir, 
@@ -135,68 +135,88 @@ class Model :
                 dataset_name + '.csv'
             ))
             
-            # Ŷ
-            prediction_data = np.zeros((prediction_size, dataset.shape[0]))
-            # Y
-            real_data = np.zeros((prediction_size, dataset.shape[0]))
-            # Grupos
-            group_data = np.zeros((prediction_size, dataset.shape[0]))
-            
+            # Cargar dataset de grupos en memoria
             grupos = pd.read_csv(os.path.join(
                 os.path.dirname(__file__),
                 os.pardir,
                 'Datasets/',
                 group_dataset + '.csv'
             ))
+            # Objeto para buscar ccts en el dataset de grupos
             unique_index = pd.Index(list(grupos['cct']))
             
-            # Preparar matriz de grupos para probabilidad de riesgo
-            for i in range(dataset.shape[0]) :
-                # Encontrar cct en dataset de grupos
-                cct = dataset["cct"][i]
+            num_escuelas = dataset.shape[0]
+            # Número de observaciones a evaluar por cada escuela
+            observaciones_escuela = (1 + self.TEST_SIZE - prediction_size)
+            # Número total de observaciones a evaluar
+            m = num_escuelas * observaciones_escuela
+            
+            # Predicciones
+            Y_hat = np.zeros((prediction_size, m))
+            # Datos reales
+            Y = np.zeros((prediction_size, m))
+            # Grupos (para métrica de probabilidad de riesgo)
+            group_data = np.zeros((prediction_size, m))
+            
+            print(Y.shape)
+            
+            # Indica la columna en la que se colocará la observación
+            ob_index = 0
+            for i in range(num_escuelas) :
+                # Escuela
+                row = np.array(dataset.loc[i])
+                cct = row[0]
+                row = row[1:]
                 
+                # Encontrar el promedio de alumnos por grupo promedio de la escuela
                 if cct in unique_index :
                     index = unique_index.get_loc(cct)
-                    col = np.array(grupos.loc[index][1:])
-                    # Alternativa A de Probabilidad de riesgo
-                    #group_data[:, i] = col[-prediction_size:]
-                    
-                    # Alternativa B de Probabilidad de riesgo
-                    # Alumnos de escuela
+                    promedio_grupos = np.array(grupos.loc[index][1:])
                     alumnos = np.array(dataset.loc[i])[1:]
+                    
                     # Broadcasting del promedio del promedio de alumnos por grupo
-                    group_data[:, i] = (alumnos[:-self.TEST_SIZE] / col[:-self.TEST_SIZE]).mean()
+                    group_val = (alumnos[:-self.TEST_SIZE] / promedio_grupos[:-self.TEST_SIZE]).mean()
+    			    
                 else :
-                    # Inf broadcasting
-                    group_data[:, i] = 1e9
-            
-            dataset = dataset.drop('cct', 1)
+                    # Broadcasting de infinito
+                    group_val = 1e9
+    			
+                for j in range(observaciones_escuela) :
+                    # Datos históricos de la observación
+                    ob_X = row[: -(self.TEST_SIZE - j)]
+                    # Datos a predecir de la observación
+                    if prediction_size + j == self.TEST_SIZE :
+                        ob_Y = row[-self.TEST_SIZE + j:]
+                    else :
+                        ob_Y = row[-self.TEST_SIZE + j: -(self.TEST_SIZE - prediction_size) + j]
+                    # Predicción de los datos
+                    ob_Y_hat = self.predict(ob_X, prediction_size)
+                    
+                    Y_hat[:, ob_index] = ob_Y_hat
+                    Y[:, ob_index] = ob_Y
+                    group_data[:, ob_index] = group_val
 
-            #m = prediction_size * dataset.shape[0]  # Número total de predicciones
-            prediction_data = np.zeros((prediction_size, dataset.shape[0])) # Ŷ
-            real_data = np.zeros((prediction_size, dataset.shape[0])) # Y
-
-            for i in range(dataset.shape[0]) :
-                row = np.array(dataset.loc[i])
-                
-                # Separamos los últimos 5 años
-                X = row[: -self.TEST_SIZE]
-                
-                if prediction_size == self.TEST_SIZE :
-                    Y = row[-self.TEST_SIZE :]
-                else :
-                    Y = row[-self.TEST_SIZE : -(self.TEST_SIZE - prediction_size)]
-
-                prediction_data[:, i] = self.predict(X, prediction_size)
-                real_data[:, i] = Y
-                
-            self.cached_sets[key] = TestResult(prediction_data, real_data, group_data)
+                    ob_index += 1
+            self.cached_sets[key] = TestResult(Y_hat, Y, group_data)
+        
         return self.cached_sets[key]
 
 if __name__ == '__main__' :
-    m = Model(linear_regression_predict)
-    m.test_set(
-        dataset_name = 'DummySet',
-        prediction_size = 5,
-        group_dataset = 'GruposPrimaria'
-    )
+   model = Model(dnn_predict, args = dict(cached_model = load_model('ValidacionPrimarias')))
+   #model = Model(naive_forecasting_predict)
+   test_result = model.test_set(
+       dataset_name = 'PrimariasCompletas',
+       prediction_size = 1,
+       group_dataset = 'GruposPrimaria'
+   )
+   # Métricas del primer año
+   metricas = test_result.metricas[0]
+   mae = metricas[0]
+   rmse = metricas[1]
+   mape = metricas[2]
+   rp = metricas[3]
+   
+   print("MAE: %.3lf" % (mae))
+   print("RMSE: %.3lf" % (rmse))
+   print("MAPE: %.3lf" % (mape))
+   print("RP: %.3lf" % (rp))

@@ -1,7 +1,6 @@
 import os, sys
 import tensorflow as tf
 import numpy as np
-#import pandas as pd
 from tensorflow.keras.models import model_from_json
 
 def load_model(model_name = 'default') :
@@ -113,6 +112,66 @@ def dnn_predict_by_year(data, prediction_size, cached_model = None) :
 	prediction = model.predict(X)
 	return prediction[0]
 
+def differenced_dnn(data, prediction_size, cached_model) :
+	assert(prediction_size == 1)
+	def differencing_transform(data) :
+		n = len(data) - 1
+		new_data = np.zeros(n)
+		for i in range(n - 1, -1, -1) :
+			new_data[i] = data[i + 1] - data[i]
+		
+		return new_data.astype(np.int32)
+	
+	new_data = differencing_transform(data) 
+	
+	model = None
+	if cached_model == None :
+		model = load_model()
+	else :
+		model = cached_model
+	
+	window_len = model.layers[0].input_shape[1]
+	
+	prediction = np.zeros(prediction_size)
+	X = np.zeros((1, window_len))
+	X[0] = new_data[-window_len:]
+	assert(X.shape == (1, window_len))
+	
+	for i in range(prediction_size) :
+		prediction[i] = model.predict(X)[0][0]
+		for j in range(window_len - 1) :
+			X[0][j] = X[0][j + 1]
+		X[0][window_len - 1] = prediction[i]
+	
+	# Esto solo va a funcionar si prediction_size == 1
+	return (prediction + data[-1]).astype(np.int32)
+
+def dnn_predict_by_mean(data, prediction_size) :
+	mean = data.mean() 
+	if mean > 73.045 :
+		model = load_model('DNNMediana2')
+	else :
+		model = load_model('DNNMediana1')
+	
+	window_len = model.layers[0].input_shape[1]
+	
+	prediction = np.zeros(prediction_size)
+	X = np.zeros((1, window_len))
+	X[0] = data[-window_len:]
+	assert(X.shape == (1, window_len))
+	
+	for i in range(prediction_size) :
+		prediction[i] = model.predict(X)[0][0]
+		for j in range(window_len - 1) :
+			X[0][j] = X[0][j + 1]
+		X[0][window_len - 1] = prediction[i]
+	
+	return prediction
+
 if __name__ == "__main__" :
-	# Aquí van las pruebas
-	pass
+	escuela = np.array([188,180,172,204,187,180,177,182,178,171,165,162,160,159,167,163,151])
+	print(differenced_dnn(
+		data = escuela,
+		prediction_size = 1,
+		cached_model = load_model('DNNPublicas')
+	))
