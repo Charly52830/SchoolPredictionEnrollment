@@ -9,6 +9,9 @@ import pandas as pd
 from Metodos.LinearRegression import linear_regression_predict
 from Metodos.NaiveForecasting import naive_forecasting_predict
 from Metodos.DNN import dnn_predict, load_model
+from Metodos.IndividualANN import individual_ann
+from Metodos.DifferencedDNN import differenced_dnn
+from Entrenamiento.Normalizators import MinMaxNormalizator, DummyNormalizator
 
 class TestResult :
     """Clase que contiene los resultados de las métricas de evaluación. La clase
@@ -168,14 +171,16 @@ class Model :
                 cct = row[0]
                 row = row[1:]
                 
-                # Encontrar el promedio de alumnos por grupo promedio de la escuela
+                # Encontrar el promedio de (la taza de alumnos por grupo en cada año)
                 if cct in unique_index :
                     index = unique_index.get_loc(cct)
-                    promedio_grupos = np.array(grupos.loc[index][1:])
+                    # Número de grupos en cada año
+                    grupos_escuela = np.array(grupos.loc[index][1:])
+                    # Número real de alumnos en cada año
                     alumnos = np.array(dataset.loc[i])[1:]
                     
                     # Broadcasting del promedio del promedio de alumnos por grupo
-                    group_val = (alumnos[:-self.TEST_SIZE] / promedio_grupos[:-self.TEST_SIZE]).mean()
+                    group_val = (alumnos[:-self.TEST_SIZE] / grupos_escuela[:-self.TEST_SIZE]).mean()
     			    
                 else :
                     # Broadcasting de infinito
@@ -202,21 +207,15 @@ class Model :
         return self.cached_sets[key]
 
 if __name__ == '__main__' :
-   model = Model(dnn_predict, args = dict(cached_model = load_model('ValidacionPrimarias')))
-   #model = Model(naive_forecasting_predict)
-   test_result = model.test_set(
-       dataset_name = 'PrimariasCompletas',
-       prediction_size = 1,
-       group_dataset = 'GruposPrimaria'
-   )
-   # Métricas del primer año
-   metricas = test_result.metricas[0]
-   mae = metricas[0]
-   rmse = metricas[1]
-   mape = metricas[2]
-   rp = metricas[3]
-   
-   print("MAE: %.3lf" % (mae))
-   print("RMSE: %.3lf" % (rmse))
-   print("MAPE: %.3lf" % (mape))
-   print("RP: %.3lf" % (rp))
+	m = Model(individual_ann, args = dict(window_len = 5))
+	#m = Model(differenced_dnn, args = dict(window_len = 5))
+	test_result = m.test_set(
+		dataset_name = 'DummySet',
+		prediction_size = 1,
+		group_dataset = 'GruposPrimaria',
+	)
+	mae, rmse, mape, rp = test_result.metricas[0]
+	print("MAE: %.3lf" % (mae))
+	print("RMSE: %.3lf" % (rmse))
+	print("MAPE: %.3lf" % (mape))
+	print("RP: %.3lf" % (rp))
