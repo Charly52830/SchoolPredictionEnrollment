@@ -12,7 +12,7 @@ class Normalizator:
 
 class MinMaxNormalizator(Normalizator) :
 
-	def __init__(self, data, a, b) :
+	def __init__(self, data, a = -1, b = 1) :
 		self.max = np.max(data)
 		self.min = np.min(data)
 		self.a = a
@@ -27,7 +27,7 @@ class MinMaxNormalizator(Normalizator) :
 
 class DifferencingNormalizator(Normalizator) :
 	
-	def __init__(self) :
+	def __init__(self, data) :
 		pass
 	
 	def normalize(self, data) :

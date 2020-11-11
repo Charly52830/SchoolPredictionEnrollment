@@ -6,7 +6,11 @@ sys.path.append(parentdir)
 
 import numpy as np
 import pandas as pd
-from Metodos.LinearRegression import linear_regression_predict
+from Metodos.LinearRegression import linear_regression_predict, base_linear_regression
+from Metodos.AutoRegression import ar_predict
+from Metodos.AutoARIMA import auto_arima_predict
+from Metodos.IndividualANN import individual_ann 
+from Entrenamiento.Normalizators import MinMaxNormalizator, DummyNormalizator, DifferencingNormalizator
 
 class TestResult :
     """Clase que contiene los resultados de las métricas de evaluación. La clase
@@ -174,11 +178,11 @@ class Model :
                     
                     # Broadcasting del promedio del promedio de alumnos por grupo
                     group_val = (alumnos[:-self.TEST_SIZE] / grupos_escuela[:-self.TEST_SIZE]).mean()
-    			    
+                    
                 else :
                     # Broadcasting de infinito
                     group_val = 1e9
-    			
+                
                 for j in range(observaciones_escuela) :
                     # Datos históricos de la observación
                     ob_X = row[: -(self.TEST_SIZE - j)]
@@ -193,21 +197,25 @@ class Model :
                     Y_hat[:, ob_index] = ob_Y_hat
                     Y[:, ob_index] = ob_Y
                     group_data[:, ob_index] = group_val
-
+                    
                     ob_index += 1
             self.cached_sets[key] = TestResult(Y_hat, Y, group_data)
         
         return self.cached_sets[key]
 
 if __name__ == '__main__' :
-	m = Model(linear_regression_predict)
+	#m = Model(base_linear_regression)
+	#m = Model(AR_predict, {'normalizators' : []})
+	#m = Model(auto_arima_predict, {'normalizators' : [MinMaxNormalizator]})
+	m = Model(individual_ann, {'window_len' : 5, 'normalizators' : [MinMaxNormalizator]})
 	test_result = m.test_set(
-		dataset_name = 'PrimariasCompletas',
+		dataset_name = 'DummySet',
 		prediction_size = 1,
 		group_dataset = 'GruposPrimaria'
 	)
-	mae, rmse, mape, rp = test_result.metricas[0]
+	mae, rmse, mape, rp = test_result.metricas[-1]
 	print("MAE: %.3lf" % (mae))
 	print("RMSE: %.3lf" % (rmse))
 	print("MAPE: %.3lf" % (mape))
 	print("RP: %.3lf" % (rp))
+	

@@ -5,13 +5,11 @@ parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 
 import numpy as np
-import pandas as pd
-from pmdarima.arima import auto_arima
+from statsmodels.tsa.ar_model import AR
 from Entrenamiento.Normalizators import MinMaxNormalizator, DummyNormalizator, DifferencingNormalizator
 
-def auto_arima_predict(data, prediction_size, normalizators = []) :
-	"""Realiza una predicción utilizando el modelo ARIMA luego de encontrar los
-	parámetros de p, d y q que mejor modelen a la serie de tiempo.
+def ar_predict(data, prediction_size, normalizators = []) :
+	"""Método de predicción que aplica un modelo auto regresivo.
 	
 	Args:
 		data (:obj: `numpy.array`): numpy array con los valores reales de la
@@ -30,28 +28,14 @@ def auto_arima_predict(data, prediction_size, normalizators = []) :
 		normalizator = normalizators[i](data)
 		data = normalizator.normalize(data)
 		norms.append(normalizator)
-	
-	model = auto_arima(
-		y = data,
-		start_p = 0,
-		start_q = 0,
-		max_p = 7,
-		max_d = 3,
-		max_q = 7,
-		start_P = 0,
-		start_Q = 0,
-		max_P = 4,
-		max_Q = 4,
-		m = 1,
-		seasonal = False,
-		suppress_warnings = True,
-		stepwise = True,
-		random_state = 20,
-		n_fits = 50,
-		trace = False,
-		max_order = 10,
+
+	model = AR(data).fit()
+		
+	prediction = model.predict(
+		start = len(data), 
+		end = len(data) + prediction_size - 1 , 
+		dynamic = True
 	)
-	prediction = model.predict(n_periods = prediction_size)
 	
 	# Aplicar las desnormalizaciones en el orden inverso
 	for i in range(len(norms) - 1, -1, -1) :
@@ -59,4 +43,6 @@ def auto_arima_predict(data, prediction_size, normalizators = []) :
 	return prediction
 
 if __name__ == '__main__' :
-	pass
+	escuela = np.array([89,127,134,152,170,172,182,192,197,210,219,222,232,226,222,205,222])
+	prediction = AR_predict(escuela, 5, [MinMaxNormalizator, DifferencingNormalizator])
+	print(prediction)

@@ -7,6 +7,7 @@ sys.path.append(parentdir)
 import os, sys
 import tensorflow as tf
 import numpy as np
+import warnings
 
 from Entrenamiento.Normalizators import MinMaxNormalizator, DummyNormalizator, DifferencingNormalizator
 
@@ -81,7 +82,7 @@ def load_data(data, window_len, shuffle = False) :
 	
 	return tf.cast(inputs, tf.float64), tf.cast(targets, tf.float64)
 
-def individual_ann(data, prediction_size, window_len, normalizator = DummyNormalizator()) :
+def individual_ann(data, prediction_size, window_len, normalizators = []) :
 	"""Función que entrena una red neuronal para una sola serie de tiempo y que
 	se entrena únicamente con los datos de la serie de tiempo.
 	
@@ -91,9 +92,9 @@ def individual_ann(data, prediction_size, window_len, normalizator = DummyNormal
 		prediction_size (int): número de años a predecir.
 		window_len (int): número de lags que representan a los predictores de la
 			ANN.
-		normalizador (:obj: `Normalizator`): normalizador de la serie de tiempo.
-			Aplica una normalización a la entrada para el entrenamiento y a la
-			salida final.
+		normalizators (:list: `Normalizator`): lista de objetos Normalizator. Las 
+			normalizaciones se aplican en el orden en el que se encuentran en la 
+			lista y se encuentran en el directorio Entrenamiento/Normalizators.
 	Returns:
 		(:obj: `numpy.array`): arreglo numpy con los datos de la predicción 
 			con forma (prediction__size,)
@@ -101,15 +102,19 @@ def individual_ann(data, prediction_size, window_len, normalizator = DummyNormal
 	"""
 	tf.random.set_seed(1)
 	data = data.astype(np.float64)
-	#normalizator2 = DifferencingNormalizator()
-	#data = normalizator2.normalize(data)
-	normalizator = MinMaxNormalizator(data, -1, 1)
-	data = normalizator.normalize(data)
+	
+	# Aplicar las normalizaciones
+	norms = []
+	for i in range(len(normalizators)) :
+		normalizator = normalizators[i](data)
+		data = normalizator.normalize(data)
+		norms.append(normalizator)
 	
 	inputs, targets = load_data(data, window_len)
 	model = tf.keras.models.Sequential([
-		tf.keras.layers.Dense(120, input_shape = (None, inputs.shape[2]), activation = "tanh"),
-		tf.keras.layers.Dense(30, ),
+		tf.keras.layers.Dense(60, input_shape = (None, inputs.shape[2]), activation = "tanh"),
+		tf.keras.layers.Dense(30, activation = "tanh"),
+		tf.keras.layers.Dense(15, ),
 		tf.keras.layers.Dense(1)
 	])
 	
@@ -149,10 +154,13 @@ def individual_ann(data, prediction_size, window_len, normalizator = DummyNormal
 			X[0][j] = X[0][j + 1]
 		X[0][window_len - 1] = prediction[i]
 	
-	return normalizator.denormalize(prediction)
-	#return normalizator2.denormalize(normalizator.denormalize(prediction))
+	# Aplicar las desnormalizaciones en el orden inverso
+	for i in range(len(norms) - 1, -1, -1) :
+		prediction = norms[i].denormalize(prediction)
+	return prediction
 
 if __name__ == '__main__' :
+	warnings.filterwarnings("ignore")
 	escuela = np.array([89,127,134,152,170,172,182,192,197,210,219,222,233,226,222,205,222,223])
 	prediction = individual_ann(
 		data = escuela,
