@@ -199,6 +199,7 @@ class Model :
                     group_data[:, ob_index] = group_val
                     
                     ob_index += 1
+                print("Escuela %d de %d terminada" % (i + 1, num_escuelas))
             self.cached_sets[key] = TestResult(Y_hat, Y, group_data)
         
         return self.cached_sets[key]
