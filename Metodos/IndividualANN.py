@@ -4,10 +4,8 @@ currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 
-import os, sys
 import tensorflow as tf
 import numpy as np
-import warnings
 
 from Entrenamiento.Normalizators import MinMaxNormalizator, DummyNormalizator, DifferencingNormalizator
 
@@ -160,12 +158,11 @@ def individual_ann(data, prediction_size, window_len, normalizators = []) :
 	return prediction
 
 if __name__ == '__main__' :
-	warnings.filterwarnings("ignore")
-	escuela = np.array([89,127,134,152,170,172,182,192,197,210,219,222,233,226,222,205,222,223])
+	escuela = np.array([377,388,392,394,408,405,426,403,414,412,424,438,429,443,429,430,428])
 	prediction = individual_ann(
 		data = escuela,
 		prediction_size = 5,
 		window_len = 5,
-		normalizator = MinMaxNormalizator(escuela, -1, 1)
+		normalizators = [MinMaxNormalizator]
 	)
 	print(prediction)

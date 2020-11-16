@@ -59,4 +59,11 @@ def auto_arima_predict(data, prediction_size, normalizators = []) :
 	return prediction
 
 if __name__ == '__main__' :
-	pass
+	escuela = np.array([377,388,392,394,408,405,426,403,414,412,424,438,429,443,429,430,428])
+	prediction = auto_arima_predict(
+		data = escuela,
+		prediction_size = 5,
+		normalizators = [MinMaxNormalizator]
+	)
+	
+	print(prediction)
