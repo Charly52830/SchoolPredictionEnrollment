@@ -5,7 +5,6 @@ parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 
 import numpy as np
-import pandas as pd
 from pmdarima.arima import auto_arima
 from Entrenamiento.Normalizators import MinMaxNormalizator, DummyNormalizator, DifferencingNormalizator
 
@@ -31,6 +30,7 @@ def auto_arima_predict(data, prediction_size, normalizators = []) :
 		data = normalizator.normalize(data)
 		norms.append(normalizator)
 	
+	# Asignar el valor máximo de los parámetros p,d,q,P,D,Q
 	model = auto_arima(
 		y = data,
 		start_p = 0,
@@ -51,6 +51,8 @@ def auto_arima_predict(data, prediction_size, normalizators = []) :
 		trace = False,
 		max_order = 10,
 	)
+	
+	# Obtener predicción
 	prediction = model.predict(n_periods = prediction_size)
 	
 	# Aplicar las desnormalizaciones en el orden inverso
@@ -59,4 +61,10 @@ def auto_arima_predict(data, prediction_size, normalizators = []) :
 	return prediction
 
 if __name__ == '__main__' :
-	pass
+	escuela = np.array([377,388,392,394,408,405,426,403,414,412,424,438,452,443,429,430,428])
+	prediction = auto_arima_predict(
+		data = escuela,
+		prediction_size = 5,
+		normalizators = [MinMaxNormalizator]
+	)
+	print(prediction)

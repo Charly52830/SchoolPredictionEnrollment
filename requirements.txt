@@ -1,0 +1,15 @@
+numpy
+pandas
+notebook
+tensorflow
+sklearn
+pmdarima
+pyFTS
+dill
+matplotlib
+bqplot
+altair
+plotly
+datapane
+dash
+ipywidgets

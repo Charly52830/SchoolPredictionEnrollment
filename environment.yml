@@ -13,5 +13,7 @@ dependencies:
     - bqplot
     - datapane
     - pmdarima
-
+    - pyFTS
+    - matplotlib
+    - dill
 

@@ -4,10 +4,8 @@ currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 
-import os, sys
 import tensorflow as tf
 import numpy as np
-import warnings
 
 from Entrenamiento.Normalizators import MinMaxNormalizator, DummyNormalizator, DifferencingNormalizator
 
@@ -25,7 +23,6 @@ def get_batch_size(n) :
 	Returns:
 		(int): número de observaciones que contendrá un batch, es decir, el
 			tamaño del batch.
-	
 	"""
 	batch_size = n
 	for x in range(2, n) :
@@ -59,14 +56,15 @@ def load_data(data, window_len, shuffle = False) :
 		targets (:obj: `tensorflow.Tensor`): tensor de dos dimensiones. La 
 			primer dimensión corresponde al número de batches, la segunda
 			corresponde al tamaño de cada batch.
-	
 	"""
 	input_data = data[: -1]
 	targets = np.concatenate((data[window_len :], np.zeros(window_len - 1)), axis = 0)
 	
 	n = len(input_data) - window_len + 1
+	# Calcular el tamaño del batch para que sea todos sean del mismo tamaño
 	batch_size = get_batch_size(n)
 	
+	# Crear ventanas de tamaño window_len con su respectivo target
 	dataset = tf.keras.preprocessing.timeseries_dataset_from_array(
 		data = input_data,
 		targets = targets,
@@ -77,6 +75,7 @@ def load_data(data, window_len, shuffle = False) :
 		batch_size = batch_size
 	)
 	
+	# Crear tensores que contengan a los batches
 	inputs = tf.stack([inputs for inputs, _ in dataset], axis = 0)
 	targets = tf.stack([target for _, target in dataset], axis = 0)
 	
@@ -98,7 +97,6 @@ def individual_ann(data, prediction_size, window_len, normalizators = []) :
 	Returns:
 		(:obj: `numpy.array`): arreglo numpy con los datos de la predicción 
 			con forma (prediction__size,)
-	
 	"""
 	tf.random.set_seed(1)
 	data = data.astype(np.float64)
@@ -110,7 +108,10 @@ def individual_ann(data, prediction_size, window_len, normalizators = []) :
 		data = normalizator.normalize(data)
 		norms.append(normalizator)
 	
+	# Cargar los datos de entrenamiento como batches para la red neuronal
 	inputs, targets = load_data(data, window_len)
+	
+	# Definir arquitectura de la red neuronal
 	model = tf.keras.models.Sequential([
 		tf.keras.layers.Dense(60, input_shape = (None, inputs.shape[2]), activation = "tanh"),
 		tf.keras.layers.Dense(30, activation = "tanh"),
@@ -118,21 +119,25 @@ def individual_ann(data, prediction_size, window_len, normalizators = []) :
 		tf.keras.layers.Dense(1)
 	])
 	
+	# Asignar el optimizador y la función de costo
 	model.compile(
 		loss = "mse",
 		optimizer = tf.keras.optimizers.SGD(lr = 1e-6, momentum = 0.9)
 	)
 	
+	# Asignar un optimizador de la tasa de aprendizaje
 	lr_schedule = tf.keras.callbacks.LearningRateScheduler(
 		lambda epoch: 1e-6 * 10 ** (epoch / 20)
 	)
 	
+	# Asignar un callback para que termine el entrenamiento si deja de aprender
 	early_stopping = tf.keras.callbacks.EarlyStopping(
 		monitor='loss',
 		patience=5,
 		mode='min'
 	)
 	
+	# Entrenar a la red neuronal
 	model.fit(
 		inputs,
 		targets,
@@ -141,6 +146,7 @@ def individual_ann(data, prediction_size, window_len, normalizators = []) :
 		verbose = 0
 	)
 	
+	# Realizar predicción
 	prediction = np.zeros(prediction_size)
 	X = np.zeros((1, window_len))
 	X[0] = data[-window_len:]
@@ -160,12 +166,11 @@ def individual_ann(data, prediction_size, window_len, normalizators = []) :
 	return prediction
 
 if __name__ == '__main__' :
-	warnings.filterwarnings("ignore")
-	escuela = np.array([89,127,134,152,170,172,182,192,197,210,219,222,233,226,222,205,222,223])
+	escuela = np.array([377,388,392,394,408,405,426,403,414,412,424,438,452,443,429,430,428])
 	prediction = individual_ann(
 		data = escuela,
 		prediction_size = 5,
 		window_len = 5,
-		normalizator = MinMaxNormalizator(escuela, -1, 1)
+		normalizators = [MinMaxNormalizator]
 	)
 	print(prediction)

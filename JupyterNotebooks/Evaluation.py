@@ -7,7 +7,6 @@ sys.path.append(parentdir)
 import numpy as np
 import pandas as pd
 from Metodos.LinearRegression import linear_regression_predict, base_linear_regression
-from Metodos.AutoRegression import ar_predict
 from Metodos.AutoARIMA import auto_arima_predict
 from Metodos.IndividualANN import individual_ann 
 from Entrenamiento.Normalizators import MinMaxNormalizator, DummyNormalizator, DifferencingNormalizator
@@ -206,7 +205,6 @@ class Model :
 
 if __name__ == '__main__' :
 	#m = Model(base_linear_regression)
-	#m = Model(AR_predict, {'normalizators' : []})
 	#m = Model(auto_arima_predict, {'normalizators' : [MinMaxNormalizator]})
 	m = Model(individual_ann, {'window_len' : 5, 'normalizators' : [MinMaxNormalizator]})
 	test_result = m.test_set(

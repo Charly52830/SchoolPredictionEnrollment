@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 from sklearn.linear_model import LinearRegression
 
 def linear_regression(data, prediction_size, window_len) :
@@ -131,5 +130,9 @@ def base_linear_regression(data, prediction_size, window_len = -1) :
 	return y_pred
 
 if __name__ == '__main__' :
-	# Aquí van las pruebas
-	pass
+	escuela = np.array([377,388,392,394,408,405,426,403,414,412,424,438,452,443,429,430,428])
+	prediction = base_linear_regression(
+		data = escuela,
+		prediction_size = 5,
+	)
+	print(prediction)
