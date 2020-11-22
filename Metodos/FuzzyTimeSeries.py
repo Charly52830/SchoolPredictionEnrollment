@@ -10,7 +10,7 @@ from pyFTS.models import pwfts, chen, hofts
 from pyFTS.common import Membership as mf
 from Entrenamiento.Normalizators import MinMaxNormalizator
 
-def fts_predict(data, prediction_size, fuzy_sets, membership_func, order, model, partitioner) :
+def fts_train(data, fuzy_sets, membership_func, order, model, partitioner) :
 	"""Función para entrenar un modelo FTS dados los hiperparámetros del modelo.
 	
 	Para más información acerca de los términos ver:
@@ -19,7 +19,6 @@ def fts_predict(data, prediction_size, fuzy_sets, membership_func, order, model,
 	Args:
 		data (:obj: `numpy.array`): numpy array de una dimensión que contiene
 			los datos de entrenamiento de la serie de tiempo.
-		prediction_size (int): número de años a predecir.
 		fuzy_sets(int): número de conjuntos (o términos lingüisticos) de los que 
 			se compondrá la variable lingüistica.
 		membership_func(:obj: `Membership.function`): función de pertenencia del 
@@ -57,10 +56,43 @@ def fts_predict(data, prediction_size, fuzy_sets, membership_func, order, model,
 	# Calcular MAPE
 	error = np.abs((y_hat - y) / y).mean()
 	
-	# Realizar predicción
-	prediction = model.predict(data, steps_ahead = prediction_size)
+	return error, model
+
+def train_hyperopt_fts(data) :
+	"""
+	"""
+	# Hiperparámetros
+	# TODO: conforme se agreguen más datos a la base de datos el número de fuzy 
+	# sets se tendrá que calibrar. (Para 16/11/2020) el óptimo es 10.
+	fuzy_sets = [10]
+	membership_functions = [mf.gaussmf, mf.trimf]
+	orders = [2, 3]
+	models = [hofts.WeightedHighOrderFTS, pwfts.ProbabilisticWeightedFTS]
+	# TODO: Intentar Entropy.EntropyPartitioner como particionador
+	partitioners = [Grid.GridPartitioner] 
 	
-	return error, prediction
+	best_error = None
+	best_model = None
+	
+	# Grid search
+	for fuzy_set in fuzy_sets :
+		for membership_function in membership_functions :
+			for order in orders :
+				for model in models :
+					for partitioner in partitioners :
+						error, model = fts_train(
+							data, 
+							fuzy_set, 
+							membership_function, 
+							order, 
+							model, 
+							partitioner
+						)
+						if best_error is None or error < best_error :
+							best_error = error
+							best_model = model
+	
+	return best_model
 
 def hyperopt_fts_predict(data, prediction_size, normalizators = []) :
 	"""Función que implementa Grid Search para optimizar los parámetros de un
@@ -87,50 +119,54 @@ def hyperopt_fts_predict(data, prediction_size, normalizators = []) :
 		data = normalizator.normalize(data)
 		norms.append(normalizator)
 	
-	# Hiperparámetros
-	# TODO: conforme se agreguen más datos a la base de datos el número de fuzy 
-	# sets se tendrá que calibrar. (Para 16/11/2020) el óptimo es 10.
-	fuzy_sets = [10]	
-	membership_functions = [mf.gaussmf, mf.trimf]
-	orders = [2, 3]
-	models = [hofts.WeightedHighOrderFTS, pwfts.ProbabilisticWeightedFTS]
-	# TODO: Intentar Entropy.EntropyPartitioner como particionador
-	partitioners = [Grid.GridPartitioner] 
+	# Entrenar el modelo
+	model = train_hyperopt_fts(data)
 	
-	best_error = None
-	best_prediction = None
-	
-	# Grid search
-	for fuzy_set in fuzy_sets :
-		for membership_function in membership_functions :
-			for order in orders :
-				for model in models :
-					for partitioner in partitioners :
-						error, prediction = fts_predict(
-							data, 
-							prediction_size, 
-							fuzy_set, 
-							membership_function, 
-							order, 
-							model, 
-							partitioner
-						)
-						if best_error is None or error < best_error :
-							best_prediction = prediction
-							best_error = error
+	# Obtener predicción
+	prediction = model.predict(data, steps_ahead = prediction_size)
+	prediction = np.array(prediction)
 	
 	# Aplicar las desnormalizaciones en el orden inverso
-	prediction = np.array(best_prediction)
 	for i in range(len(norms) - 1, -1, -1) :
 		prediction = norms[i].denormalize(prediction)
 	
 	return prediction
 
+def evaluate_and_predict_fts(data, prediction_size = 5, normalizators = [MinMaxNormalizator]) :
+	"""
+	"""
+	assert(len(data) > 5)
+	# Aplicar las normalizaciones
+	norms = []
+	for i in range(len(normalizators)) :
+		normalizator = normalizators[i](data)
+		data = normalizator.normalize(data)
+		norms.append(normalizator)
+	
+	# Entrenar el modelo
+	model = train_hyperopt_fts(data)
+	
+	# Obtener predicción futura
+	prediction = np.array(model.predict(data, steps_ahead = prediction_size))
+	
+	# Obtener la predicción del conjunto de los datos de entrenamiento
+	train_prediction = []
+	for i in range(5, len(data)) :
+		next = model.predict(data[:i], steps_ahead = 1)
+		train_prediction.append(next[0])
+	
+	train_prediction = np.array(train_prediction)
+	
+	# Aplicar las desnormalizaciones en el orden inverso
+	for i in range(len(norms) - 1, -1, -1) :
+		train_prediction = norms[i].denormalize(train_prediction)
+		prediction = norms[i].denormalize(prediction)
+	
+	return prediction, train_prediction
+
 if __name__ == '__main__' :
 	escuela = np.array([377,388,392,394,408,405,426,403,414,412,424,438,429,443,429,430,428])
-	prediction = hyperopt_fts_predict(
+	prediction, train_prediction = evaluate_and_predict_fts(
 		data = escuela, 
-		prediction_size = 5, 
-		#normalizators = [MinMaxNormalizator]
 	)
-	print(prediction)
+	print(prediction, train_prediction)

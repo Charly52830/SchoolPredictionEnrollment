@@ -81,32 +81,10 @@ def load_data(data, window_len, shuffle = False) :
 	
 	return tf.cast(inputs, tf.float64), tf.cast(targets, tf.float64)
 
-def individual_ann(data, prediction_size, window_len, normalizators = []) :
-	"""Función que entrena una red neuronal para una sola serie de tiempo y que
-	se entrena únicamente con los datos de la serie de tiempo.
-	
-	Args:
-		data (:obj: `numpy.array`): numpy array de una dimensión que contiene
-			los datos de entrenamiento de la serie de tiempo.
-		prediction_size (int): número de años a predecir.
-		window_len (int): número de lags que representan a los predictores de la
-			ANN.
-		normalizators (:list: `Normalizator`): lista de objetos Normalizator. Las 
-			normalizaciones se aplican en el orden en el que se encuentran en la 
-			lista y se encuentran en el directorio Entrenamiento/Normalizators.
-	Returns:
-		(:obj: `numpy.array`): arreglo numpy con los datos de la predicción 
-			con forma (prediction__size,)
+def train_individual_ann(data, window_len) :
+	"""
 	"""
 	tf.random.set_seed(1)
-	data = data.astype(np.float64)
-	
-	# Aplicar las normalizaciones
-	norms = []
-	for i in range(len(normalizators)) :
-		normalizator = normalizators[i](data)
-		data = normalizator.normalize(data)
-		norms.append(normalizator)
 	
 	# Cargar los datos de entrenamiento como batches para la red neuronal
 	inputs, targets = load_data(data, window_len)
@@ -146,7 +124,38 @@ def individual_ann(data, prediction_size, window_len, normalizators = []) :
 		verbose = 0
 	)
 	
-	# Realizar predicción
+	return model
+
+def individual_ann(data, prediction_size, window_len, normalizators = []) :
+	"""Función que entrena una red neuronal para una sola serie de tiempo y que
+	se entrena únicamente con los datos de la serie de tiempo.
+	
+	Args:
+		data (:obj: `numpy.array`): numpy array de una dimensión que contiene
+			los datos de entrenamiento de la serie de tiempo.
+		prediction_size (int): número de años a predecir.
+		window_len (int): número de lags que representan a los predictores de la
+			ANN.
+		normalizators (:list: `Normalizator`): lista de objetos Normalizator. Las 
+			normalizaciones se aplican en el orden en el que se encuentran en la 
+			lista y se encuentran en el directorio Entrenamiento/Normalizators.
+	Returns:
+		(:obj: `numpy.array`): arreglo numpy con los datos de la predicción 
+			con forma (prediction__size,)
+	"""
+	data = data.astype(np.float64)
+	
+	# Aplicar las normalizaciones
+	norms = []
+	for i in range(len(normalizators)) :
+		normalizator = normalizators[i](data)
+		data = normalizator.normalize(data)
+		norms.append(normalizator)
+
+	# Entrenar el modelo
+	model = train_individual_ann(data, window_len)
+	
+	# Obtener predicción
 	prediction = np.zeros(prediction_size)
 	X = np.zeros((1, window_len))
 	X[0] = data[-window_len:]
@@ -165,12 +174,49 @@ def individual_ann(data, prediction_size, window_len, normalizators = []) :
 		prediction = norms[i].denormalize(prediction)
 	return prediction
 
+def evaluate_and_predict_ann(data, prediction_size = 5, window_len = 5, normalizators = [MinMaxNormalizator]) :
+	"""
+	"""
+	data = data.astype(np.float64)
+	
+	# Aplicar las normalizaciones
+	norms = []
+	for i in range(len(normalizators)) :
+		normalizator = normalizators[i](data)
+		data = normalizator.normalize(data)
+		norms.append(normalizator)
+
+	# Entrenar el modelo
+	model = train_individual_ann(data, window_len)
+	
+	# Obtener predicción futura
+	prediction = np.zeros(prediction_size)
+	X = np.zeros((1, window_len))
+	X[0] = data[-window_len:]
+	assert(X.shape == (1, window_len))
+	
+	for i in range(prediction_size) :
+		X_tensor = tf.constant(X)
+		X_tensor = tf.reshape(X_tensor, (1, 1, window_len))
+		prediction[i] = model.predict(X_tensor)[0][0][0]
+		for j in range(window_len - 1) :
+			X[0][j] = X[0][j + 1]
+		X[0][window_len - 1] = prediction[i]
+	
+	# Obtener la predicción del conjunto de los datos de entrenamiento
+	inputs, targets = load_data(data, window_len)
+	train_prediction = model.predict(inputs).flatten()
+		
+	# Aplicar las desnormalizaciones en el orden inverso
+	for i in range(len(norms) - 1, -1, -1) :
+		train_prediction = norms[i].denormalize(train_prediction)
+		prediction = norms[i].denormalize(prediction)
+	
+	return prediction, train_prediction
+
 if __name__ == '__main__' :
 	escuela = np.array([377,388,392,394,408,405,426,403,414,412,424,438,452,443,429,430,428])
-	prediction = individual_ann(
-		data = escuela,
-		prediction_size = 5,
-		window_len = 5,
-		normalizators = [MinMaxNormalizator]
+	prediction, train_prediction = evaluate_and_predict_ann(
+		data = escuela
 	)
-	print(prediction)
+	print(prediction, train_prediction)

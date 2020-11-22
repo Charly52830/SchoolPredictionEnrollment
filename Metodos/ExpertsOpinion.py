@@ -5,9 +5,9 @@ parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 
 import numpy as np
-from Metodos.IndividualANN import individual_ann
-from Metodos.FuzzyTimeSeries import hyperopt_fts_predict
-from Metodos.AutoARIMA import auto_arima_predict
+from Metodos.IndividualANN import individual_ann, evaluate_and_predict_ann
+from Metodos.FuzzyTimeSeries import hyperopt_fts_predict, evaluate_and_predict_fts
+from Metodos.AutoARIMA import auto_arima_predict, evaluate_and_predict_arima
 from Entrenamiento.Normalizators import MinMaxNormalizator
 
 def weightless_ep(data, prediction_size, experts = []) :
@@ -36,15 +36,28 @@ def weightless_ep(data, prediction_size, experts = []) :
 		
 	return global_prediction / len(experts)
 
+def evaluate_and_predict_ep(data, prediction_size = 5, 
+	experts = [evaluate_and_predict_ann, evaluate_and_predict_arima, evaluate_and_predict_fts]) :
+	"""
+	"""
+	assert(len(data) > 5)
+	global_prediction = np.zeros((prediction_size))
+	global_train_prediction = np.zeros((len(data) - 5))
+	
+	for expert in experts :
+		args = dict()
+		args['data'] = data
+		args['prediction_size'] = prediction_size
+		prediction, train_prediction = expert(**args)
+		global_prediction += prediction
+		global_train_prediction += train_prediction
+	
+	return global_prediction / len(experts), global_train_prediction / len(experts)
+	
+
 if __name__ == '__main__' :
 	escuela = np.array([377,388,392,394,408,405,426,403,414,412,424,438,452,443,429,430,428])
-	prediction = weightless_ep(
+	prediction, train_prediction = evaluate_and_predict_ep(
 		data = escuela,
-		prediction_size = 5,
-		experts = [
-			(individual_ann, dict(window_len = 5, normalizators = [MinMaxNormalizator])), 
-			(hyperopt_fts_predict, dict()), 
-			(auto_arima_predict, dict(normalizators = [MinMaxNormalizator]))
-		]
 	)
-	print(prediction)
+	print(prediction, train_prediction)

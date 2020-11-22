@@ -8,28 +8,9 @@ import numpy as np
 from pmdarima.arima import auto_arima
 from Entrenamiento.Normalizators import MinMaxNormalizator, DummyNormalizator, DifferencingNormalizator
 
-def auto_arima_predict(data, prediction_size, normalizators = []) :
-	"""Realiza una predicción utilizando el modelo ARIMA luego de encontrar los
-	parámetros de p, d y q que mejor modelen a la serie de tiempo.
-	
-	Args:
-		data (:obj: `numpy.array`): numpy array con los valores reales de la
-			observación.
-		prediction_size (int): número de años a predecir.
-		normalizators (:list: `Normalizator`): lista de objetos Normalizator. Las 
-			normalizaciones se aplican en el orden en el que se encuentran en la 
-			lista y se encuentran en el directorio Entrenamiento/Normalizators.
-	
-	Returns:
-		(:obj: `numpy.array`): numpy array con los valores de la predicción.
+def train_auto_arima(data) :
 	"""
-	# Aplicar las normalizaciones
-	norms = []
-	for i in range(len(normalizators)) :
-		normalizator = normalizators[i](data)
-		data = normalizator.normalize(data)
-		norms.append(normalizator)
-	
+	"""
 	# Asignar el valor máximo de los parámetros p,d,q,P,D,Q
 	model = auto_arima(
 		y = data,
@@ -52,6 +33,33 @@ def auto_arima_predict(data, prediction_size, normalizators = []) :
 		max_order = 10,
 	)
 	
+	return model
+
+def auto_arima_predict(data, prediction_size, normalizators = []) :
+	"""Realiza una predicción utilizando el modelo ARIMA luego de encontrar los
+	parámetros de p, d y q que mejor modelen a la serie de tiempo.
+	
+	Args:
+		data (:obj: `numpy.array`): numpy array con los valores reales de la
+			observación.
+		prediction_size (int): número de años a predecir.
+		normalizators (:list: `Normalizator`): lista de objetos Normalizator. Las 
+			normalizaciones se aplican en el orden en el que se encuentran en la 
+			lista y se encuentran en el directorio Entrenamiento/Normalizators.
+	
+	Returns:
+		(:obj: `numpy.array`): numpy array con los valores de la predicción.
+	"""
+	# Aplicar las normalizaciones
+	norms = []
+	for i in range(len(normalizators)) :
+		normalizator = normalizators[i](data)
+		data = normalizator.normalize(data)
+		norms.append(normalizator)
+	
+	# Entrenar el modelo
+	model = train_auto_arima(data)
+	
 	# Obtener predicción
 	prediction = model.predict(n_periods = prediction_size)
 	
@@ -60,11 +68,35 @@ def auto_arima_predict(data, prediction_size, normalizators = []) :
 		prediction = norms[i].denormalize(prediction)
 	return prediction
 
+def evaluate_and_predict_arima(data, prediction_size = 5, normalizators = [MinMaxNormalizator]) :
+	"""
+	"""
+	# Aplicar las normalizaciones
+	norms = []
+	for i in range(len(normalizators)) :
+		normalizator = normalizators[i](data)
+		data = normalizator.normalize(data)
+		norms.append(normalizator)
+	
+	# Entrenar el modelo
+	model = train_auto_arima(data)
+	
+	# Obtener predicción futura
+	prediction = model.predict(n_periods = prediction_size)
+	
+	# Obtener la predicción del conjunto de los datos de entrenamiento
+	train_prediction = model.predict_in_sample()[5:]
+	
+	# Aplicar las desnormalizaciones en el orden inverso
+	for i in range(len(norms) - 1, -1, -1) :
+		train_prediction = norms[i].denormalize(train_prediction)
+		prediction = norms[i].denormalize(prediction)
+		
+	return prediction, train_prediction
+
 if __name__ == '__main__' :
 	escuela = np.array([377,388,392,394,408,405,426,403,414,412,424,438,452,443,429,430,428])
-	prediction = auto_arima_predict(
-		data = escuela,
-		prediction_size = 5,
-		normalizators = [MinMaxNormalizator]
+	prediction, train_prediction = evaluate_and_predict_arima(
+		data = escuela
 	)
-	print(prediction)
+	print(prediction, train_prediction)
