@@ -49,6 +49,7 @@ def evaluate_and_predict_ep(data, prediction_size = 5,
 		args['data'] = data
 		args['prediction_size'] = prediction_size
 		prediction, train_prediction = expert(**args)
+		print(prediction)
 		global_prediction += prediction
 		global_train_prediction += train_prediction
 	
@@ -56,7 +57,7 @@ def evaluate_and_predict_ep(data, prediction_size = 5,
 	
 
 if __name__ == '__main__' :
-	escuela = np.array([377,388,392,394,408,405,426,403,414,412,424,438,452,443,429,430,428])
+	escuela = np.array([388,370,388,383,376,359,354,337,325,373,367,380,401,398,392,343,324,318,320,332,351,378])
 	prediction, train_prediction = evaluate_and_predict_ep(
 		data = escuela,
 	)

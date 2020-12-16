@@ -10,7 +10,7 @@ import pandas as pd
 from Metodos.ExpertsOpinion import evaluate_and_predict_ep
 
 if __name__ == '__main__' :
-	dataset_name = "DummySet"
+	dataset_name = "PrimariasCompletas"
 	archivo_grupos = "GruposPrimaria"
 	
 	archivo_proyeccion = open("Proyeccion%s.csv" % (dataset_name), "a+")
