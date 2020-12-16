@@ -91,6 +91,7 @@ class Model :
         
         # Número máximo de años de predicción
         self.TEST_SIZE = 5
+        self.VALIDATION_SIZE = 0
     
     def predict(self, data, prediction_size) :
         """Método que realiza una predicción sobre una observación de datos.
@@ -147,25 +148,22 @@ class Model :
             unique_index = pd.Index(list(grupos['cct']))
             
             num_escuelas = dataset.shape[0]
-            # Número de observaciones a evaluar por cada escuela
-            observaciones_escuela = (1 + self.TEST_SIZE - prediction_size)
-            # Número total de observaciones a evaluar
-            m = num_escuelas * observaciones_escuela
             
             # Predicciones
-            Y_hat = np.zeros((prediction_size, m))
+            Y_hat = np.zeros((prediction_size, num_escuelas))
             # Datos reales
-            Y = np.zeros((prediction_size, m))
+            Y = np.zeros((prediction_size, num_escuelas))
             # Grupos (para métrica de probabilidad de riesgo)
-            group_data = np.zeros((prediction_size, m))
+            group_data = np.zeros((prediction_size, num_escuelas))
             
             # Indica la columna en la que se colocará la observación
-            ob_index = 0
             for i in range(num_escuelas) :
                 # Escuela
                 row = np.array(dataset.loc[i])
                 cct = row[0]
                 row = row[1:]
+                if self.VALIDATION_SIZE :
+                    row = row[: - self.VALIDATION_SIZE]
                 
                 # Encontrar el promedio de (la taza de alumnos por grupo en cada año)
                 if cct in unique_index :
@@ -182,22 +180,21 @@ class Model :
                     # Broadcasting de infinito
                     group_val = 1e9
                 
-                for j in range(observaciones_escuela) :
-                    # Datos históricos de la observación
-                    ob_X = row[: -(self.TEST_SIZE - j)]
-                    # Datos a predecir de la observación
-                    if prediction_size + j == self.TEST_SIZE :
-                        ob_Y = row[-self.TEST_SIZE + j:]
-                    else :
-                        ob_Y = row[-self.TEST_SIZE + j: -(self.TEST_SIZE - prediction_size) + j]
-                    # Predicción de los datos
-                    ob_Y_hat = self.predict(ob_X, prediction_size)
-                    
-                    Y_hat[:, ob_index] = ob_Y_hat
-                    Y[:, ob_index] = ob_Y
-                    group_data[:, ob_index] = group_val
-                    
-                    ob_index += 1
+                # Datos históricos de la observación
+                ob_X = row[: -self.TEST_SIZE]
+                
+                # Datos a predecir de la observación
+                if prediction_size == self.TEST_SIZE :
+                    ob_Y = row[-self.TEST_SIZE :]
+                else :
+                    ob_Y = row[-self.TEST_SIZE : -(self.TEST_SIZE - prediction_size)]
+                # Predicción de los datos
+                ob_Y_hat = self.predict(ob_X, prediction_size)
+                
+                Y_hat[:, i] = ob_Y_hat
+                Y[:, i] = ob_Y
+                group_data[:, i] = group_val
+                
                 print("Escuela %d de %d terminada" % (i + 1, num_escuelas))
             self.cached_sets[key] = TestResult(Y_hat, Y, group_data)
         
@@ -207,9 +204,11 @@ if __name__ == '__main__' :
 	#m = Model(base_linear_regression)
 	#m = Model(auto_arima_predict, {'normalizators' : [MinMaxNormalizator]})
 	m = Model(individual_ann, {'window_len' : 5, 'normalizators' : [MinMaxNormalizator]})
+	m.TEST_SIZE = 4
+	m.VALIDATION_SIZE = 0
 	test_result = m.test_set(
 		dataset_name = 'DummySet',
-		prediction_size = 1,
+		prediction_size = 4,
 		group_dataset = 'GruposPrimaria'
 	)
 	mae, rmse, mape, rp = test_result.metricas[-1]
