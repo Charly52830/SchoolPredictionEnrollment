@@ -1,15 +1,16 @@
 import json
 import pandas as pd
 import numpy as np
-from datetime import date
 
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
+import plotly.graph_objs as go
+from datetime import date
 from dash.dependencies import Input, Output, State
 from dash_extensions.snippets import send_data_frame
 from dash_extensions import Download
-import plotly.graph_objs as go
+from statsmodels.tsa.stattools import acf, pacf
 
 from app import app
 
@@ -108,7 +109,53 @@ def toggle_navbar_collapse(n, is_open):
         return not is_open
     return is_open
 
-def generar_scatterplot(escuelas, show_legend = True, title = "Proyección de marícula") :
+def generar_correlograma(escuela, cct, es_acf = True) :
+    if es_acf :
+        correlacion = np.array(acf(escuela, nlags = len(escuela)))
+        title = "ACF de %s" % (cct)
+    else :
+        title = "PACF de %s" % (cct)
+        correlacion = np.array(pacf(escuela, nlags = len(escuela)))
+    
+    # Create figure
+    correlograma = go.Figure(data=[go.Bar(y=correlacion)])
+    
+    # Update axes
+    correlograma.update_layout(
+	    xaxis = dict(
+		    autorange = True,
+		    rangeslider = dict(
+			    autorange = True,
+			    range = [0, len(escuela)]
+		    ),
+	    ),
+	    title = title,
+	    title_font = dict(size = 20),	# Tamaño del titulo
+	    title_x = 0.5,	# Centrar el titulo
+	    #height = 700,	# Pixeles de altura
+    )
+    
+    correlograma.update_xaxes(
+	    title_text = "Lag",
+	    title_font = {"size": 20}
+    )
+
+    correlograma.update_yaxes(
+	    title_text = "ACF" if es_acf else "PACF",
+	    title_font = {"size": 20}
+    )
+    
+    # Update layout
+    correlograma.update_layout(
+        #dragmode="zoom",
+        hovermode="x",
+        #height=600,
+        template="plotly_white",
+    )
+    
+    return correlograma
+
+def generar_scatterplot(escuelas, show_legend = True, title = "Proyección de matrícula") :
 
     def add_trace(fig, cct, data, seed_year = 1998) :
         scatter = go.Scatter(
@@ -120,7 +167,8 @@ def generar_scatterplot(escuelas, show_legend = True, title = "Proyección de ma
             mode = 'lines+markers',
         )
         fig.add_trace(scatter)
-
+    
+    # Create figure
     scatterplot = go.Figure()
     
     # Add traces
@@ -235,8 +283,7 @@ def generar_scatterplot(escuelas, show_legend = True, title = "Proyección de ma
         #height=600,
         template="plotly_white",
         margin=dict(
-            t=100,
-            b=100
+            b=50
         ),
     )
     
@@ -279,10 +326,7 @@ def generar_boxplot(escuelas, show_legend = True, title = 'Box plot de la matrí
         hovermode="x",
         #height=600,
         template="plotly_white",
-        margin=dict(
-            t=100,
-            b=100
-        ),
+        
     )
     
     boxplot.update_layout(
@@ -367,7 +411,7 @@ def cargar_layout_reporte_general(escuelas) :
                             html.P(
                                 "* Fuente: estadística 911",
                                 className = "text-secondary",
-                                style = {"font-size" : "0.5rem", "margin-top" : "0", "padding" : "0"}
+                                style = {"font-size" : "0.5rem", "margin" : "0", "padding" : "0"}
                             )
                         ],
                         md = 6,
@@ -423,7 +467,25 @@ def cargar_layout_reporte_individual(escuelas, cct) :
         show_legend = False,
         title = "Box plot de %s" % (cct)
     )
-
+    
+    tabla_metricas = generar_tabla_metricas(
+        {cct : escuelas[cct]}
+    )
+    tabla_matricula = generar_tabla_matricula(
+        {cct : escuelas[cct]}
+    )
+	
+    correlograma_acf = generar_correlograma(
+        escuelas[cct]['matricula'], 
+        cct = cct,
+        es_acf = True
+    )
+    correlograma_pacf = generar_correlograma(
+        escuelas[cct]['matricula'],
+        cct = cct,
+        es_acf = False
+    )
+	
     # Crear layout de la página
     layout_reporte_individual = dbc.Container([
         dbc.Row([
@@ -519,18 +581,60 @@ def cargar_layout_reporte_individual(escuelas, cct) :
         ),
         dbc.Row([
             dbc.Col([
-                    dcc.Graph(figure = scatterplot)
-                ],
+                dcc.Graph(figure = scatterplot),
+                html.P(
+                    "* Proyección realizada utilizando opinión de expertos",
+                    className = "text-secondary",
+                    style = {"font-size" : "0.5rem", "margin" : "0", "padding" : "0"}
+                ),
+                html.P(
+                    "* Fuente: estadística 911",
+                    className = "text-secondary",
+                    style = {"font-size" : "0.5rem", "margin" : "0", "padding" : "0"}
+                )],
                 md = 6
             ),
             dbc.Col([
-                    dcc.Graph(figure = boxplot)
-                ],
+                dcc.Graph(figure = boxplot)],
                 md = 6
             )]
+        ),
+        dbc.Row([
+            dbc.Col([
+                dcc.Graph(figure = correlograma_acf)],
+                md = 6
+            ),
+            dbc.Col([
+                dcc.Graph(figure = correlograma_pacf)],
+                md = 6
+            )]
+        ),
+        dbc.Row([
+            dbc.Col([
+                dbc.Container(dbc.Row([
+                    html.H4("Matrícula por ciclo escolar"), 
+                    dbc.Button([
+                        "Descargar csv ",
+                        html.I(className="far fa-arrow-alt-circle-down")],
+                        color = "info",
+                        style = {
+                            "padding" : "0.2rem", "margin" : "0 0.2rem 0.2rem 0.2rem", 
+                            "background" : "#1199EE"
+                        },
+                        id = "descargar_csv_button"
+                    ),
+                    Download(id = "descargar_csv")]
+                )),
+                tabla_matricula],
+                md = 6,
+            ),
+            dbc.Col([
+                html.H4("Métricas de la proyección"),
+                tabla_metricas],
+                md = 6,
+            )],
         )]
     )
-    
     return layout_reporte_individual
 
 @app.callback(
