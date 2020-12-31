@@ -20,9 +20,21 @@ class MinMaxNormalizator(Normalizator) :
 		assert(a < b)
 	
 	def normalize(self, data) :
+		if self.max == self.min :
+			"""
+			Caso especial, si todos los números son iguales MinMaxNormalizator se
+			convierte en DummyNormalizator
+			"""
+			return data
 		return self.a + ((data - self.min) * (self.b - self.a)) / (self.max - self.min)
 	
 	def denormalize(self, data) :
+		if self.max == self.min :
+			"""
+			Caso especial, si todos los números son iguales MinMaxNormalizator se
+			convierte en DummyNormalizator
+			"""
+			return data
 		return self.min + ((data - self.a) * (self.max - self.min)) / (self.b - self.a)
 
 class DifferencingNormalizator(Normalizator) :

@@ -68,7 +68,7 @@ def auto_arima_predict(data, prediction_size, normalizators = []) :
 		prediction = norms[i].denormalize(prediction)
 	return prediction
 
-def evaluate_and_predict_arima(data, prediction_size = 5, normalizators = [MinMaxNormalizator]) :
+def evaluate_and_predict_arima(data, prediction_size = 5, normalizators = [MinMaxNormalizator], OFFSET_ANIOS = 5) :
 	"""
 	"""
 	# Aplicar las normalizaciones
@@ -85,18 +85,22 @@ def evaluate_and_predict_arima(data, prediction_size = 5, normalizators = [MinMa
 	prediction = model.predict(n_periods = prediction_size)
 	
 	# Obtener la predicción del conjunto de los datos de entrenamiento
-	train_prediction = model.predict_in_sample()[5:]
+	if OFFSET_ANIOS :
+		train_prediction = model.predict_in_sample()[OFFSET_ANIOS:]
+	else :
+		train_prediction = model.predict_in_sample()
 	
 	# Aplicar las desnormalizaciones en el orden inverso
 	for i in range(len(norms) - 1, -1, -1) :
 		train_prediction = norms[i].denormalize(train_prediction)
 		prediction = norms[i].denormalize(prediction)
-		
+	
 	return prediction, train_prediction
 
 if __name__ == '__main__' :
-	escuela = np.array([377,388,392,394,408,405,426,403,414,412,424,438,452,443,429,430,428])
+	escuela = np.array([89,127,134,152,170,172,182,192,197,210,219,222,233,226,222,205,222,229,241,275,330,357])
 	prediction, train_prediction = evaluate_and_predict_arima(
-		data = escuela
+		data = escuela,
+		OFFSET_ANIOS = 0
 	)
-	print(prediction, train_prediction)
+	print(prediction.shape, train_prediction.shape)

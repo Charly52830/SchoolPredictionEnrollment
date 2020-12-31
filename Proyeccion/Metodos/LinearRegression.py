@@ -162,6 +162,8 @@ def evaluate_and_predict_slr(data, prediction_size = 5, normalizators = [MinMaxN
 	# Obtener la predicción del conjunto de los datos de entrenamiento
 	train_prediction = model.predict(x)
 
+	prediction = prediction.reshape((prediction_size,))
+	train_prediction = train_prediction.reshape((len(train_prediction), ))
 	# Aplicar las desnormalizaciones en el orden inverso
 	for i in range(len(norms) - 1, -1, -1) :
 		train_prediction = norms[i].denormalize(train_prediction)
@@ -171,9 +173,6 @@ def evaluate_and_predict_slr(data, prediction_size = 5, normalizators = [MinMaxN
 
 if __name__ == '__main__' :
 	from Normalizators import MinMaxNormalizator
-	escuela = np.array([377,388,392,394,408,405,426,403,414,412,424,438,452,443,429,430,428])
-	prediction = base_linear_regression(
-		data = escuela,
-		prediction_size = 5,
-	)
-	print(prediction)
+	escuela = np.array([8.0, 8.0, 8.0])
+	prediction, train_prediction = evaluate_and_predict_slr(escuela)
+	print(prediction.shape, train_prediction.shape)

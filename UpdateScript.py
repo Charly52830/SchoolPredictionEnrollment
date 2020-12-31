@@ -204,6 +204,7 @@ $ python3.6 UpdateScript.py actualizar_datos_generales
     print("Empezando en la escuela %d" % (num_lines))
     
     from Proyeccion.Metodos.ExpertsOpinion import evaluate_and_predict_ep
+    from Proyeccion.Metodos.AutoARIMA import evaluate_and_predict_arima
     from Proyeccion.Metodos.LinearRegression import evaluate_and_predict_slr
     
     for i in range(num_lines - 1, len(escuelas)) :
@@ -216,10 +217,14 @@ $ python3.6 UpdateScript.py actualizar_datos_generales
             proy_matricula_futura, proy_matricula_historica = evaluate_and_predict_ep(matricula)
             matricula_historica_real = matricula[5:]
             metodo = 'EP'
+        elif len(matricula) > 4 :
+            proy_matricula_futura, proy_matricula_historica = evaluate_and_predict_arima(matricula, OFFSET_ANIOS = 0)
+            matricula_historica_real = matricula
+            metodo = 'ARIMA'
         elif len(matricula) > 1 :
             proy_matricula_futura, proy_matricula_historica = evaluate_and_predict_slr(matricula)
             matricula_historica_real = matricula
-            metodo = 'LR'
+            metodo = 'SLR'
         else :
             proy_matricula_futura = np.array([matricula[0]] * 5)
             proy_matricula_historica = np.array(matricula)
