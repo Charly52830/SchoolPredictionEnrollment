@@ -212,15 +212,17 @@ $ python3.6 UpdateScript.py actualizar_datos_generales
         matricula_por_grupo = escuelas[cct]['prom_alumnos_grupo']
         
         # Obtener predicción futura e histórica
-        if len(matricula) > 5 :
+        if len(matricula) > 8 :
             proy_matricula_futura, proy_matricula_historica = evaluate_and_predict_ep(matricula)
             matricula_historica_real = matricula[5:]
             metodo = 'EP'
         elif len(matricula) > 1 :
-            proy_matricula_futura, proy_matricula_historica = evaluate_and_predict_ep(matricula)
+            proy_matricula_futura, proy_matricula_historica = evaluate_and_predict_slr(matricula)
             matricula_historica_real = matricula
             metodo = 'LR'
         else :
+            proy_matricula_futura = np.array([matricula[0]] * 5)
+            proy_matricula_historica = np.array(matricula)
             matricula_historica_real = matricula
             metodo = 'NF'
         
@@ -230,16 +232,16 @@ $ python3.6 UpdateScript.py actualizar_datos_generales
         mape = np.abs((proy_matricula_historica - matricula_historica_real) / matricula_historica_real).mean()
         pr = (np.abs(proy_matricula_historica - matricula_historica_real) >= matricula_por_grupo).mean()
         
-        proy_matricula_historica = proy_matricula_historica.astype(np.int)
+        proy_matricula_futura = proy_matricula_futura.astype(np.int)
         
         # Escribir nuevo renglón
         csv_proyeccion_matricula.write("%s,%d,%d,%d,%d,%d,%.2lf,%.2lf,%.2lf,%.2lf,%s\n" % (
             cct,
-            proy_matricula_historica[0],
-            proy_matricula_historica[1],
-            proy_matricula_historica[2],
-            proy_matricula_historica[3],
-            proy_matricula_historica[4],
+            proy_matricula_futura[0],
+            proy_matricula_futura[1],
+            proy_matricula_futura[2],
+            proy_matricula_futura[3],
+            proy_matricula_futura[4],
             mae,
             rmse,
             mape,
