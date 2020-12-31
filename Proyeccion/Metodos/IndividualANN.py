@@ -7,7 +7,7 @@ sys.path.append(parentdir)
 import tensorflow as tf
 import numpy as np
 
-from Entrenamiento.Normalizators import MinMaxNormalizator, DummyNormalizator, DifferencingNormalizator
+from Metodos.Normalizators import MinMaxNormalizator
 
 def get_batch_size(n) :
 	"""Función que encuentra un divisor de n para ser el tamaño del batch. Se

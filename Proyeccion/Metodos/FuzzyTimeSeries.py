@@ -8,7 +8,7 @@ import numpy as np
 from pyFTS.partitioners import Grid, Entropy
 from pyFTS.models import pwfts, chen, hofts
 from pyFTS.common import Membership as mf
-from Entrenamiento.Normalizators import MinMaxNormalizator
+from Metodos.Normalizators import MinMaxNormalizator
 
 def fts_train(data, fuzy_sets, membership_func, order, model, partitioner) :
 	"""Función para entrenar un modelo FTS dados los hiperparámetros del modelo.

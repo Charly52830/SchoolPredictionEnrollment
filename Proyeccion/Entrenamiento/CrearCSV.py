@@ -10,6 +10,9 @@ import csv
 import pandas as pd
 from Metodos.LinearRegression import linear_regression_predict
 
+ANIO_INICIAL = 1998	# Para primarias y preescolar
+#ANIO_INICIAL = 1996	# Para secundarias
+
 def find_dataset(dataset_name, extension = '.csv') :
 	"""Función de utilidad para encontrar un archivo en el directorio Datasets.
 	
@@ -32,16 +35,22 @@ def crearCSV(dataset_name) :
 	"""Función que crea un archivo csv con los datos de las escuelas, a partir
 	de un archivo json.
 	
+	Notas importantes:
+	(08/05/2020) :
+	- Se excluyen los datos de 1996 a 1997 en primarias y preescolar porque no 
+	  son legítimos. 
+	
+	(18/07/2020) :
+	- Debido a que los datos del 2010 de primaria están perdidos, se predice el 
+	  dato con naive forecasting.
+	
+	(29/12/2020) :
+	- Debido a que los datos del 2015 de secundaria están perdidos, se predice el 
+	  dato con naive forecasting.
+	
 	Args:
 		dataset_name (str): el nombre del archivo json guardado en el directorio Datasets.
 	"""
-	
-	# Nota importante (08/05/2020) :
-	# Se excluyen los datos de 1996 a 1997 porque no son legítimos
-	
-	# Nota importante (18/07/2020) :
-	# Debido a que los datos del 2010 de primaria están perdidos, se predice el 
-	# dato con regresión linear + fixed partitioning
 	
 	# Opening JSON file 
 	f = open(find_dataset(dataset_name, '.json'))
@@ -57,17 +66,17 @@ def crearCSV(dataset_name) :
 	results.pop('@type')
 	results.pop('@version')
 
-	num_anios = int(input("Ingresa el número de años\n"))	# 22 hasta el 2019
+	num_anios = int(input("Ingresa el número de años\n"))	# 22 hasta el 2019 para primaria y preescolar, 24 para secundaria
 	
 	with open(find_dataset(dataset_name), mode = 'w') as archivo :
 		writer = csv.writer(archivo, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-		writer.writerow(["cct"] + [1998 + i for i in range(num_anios)])
+		writer.writerow(["cct"] + [ANIO_INICIAL + i for i in range(num_anios)])
 		for cct_escuela in results :
 			escuela = results[cct_escuela]
 			
 			alumnos = np.zeros(num_anios, dtype = int)
 			for i in range(num_anios) :
-				anio = 1998 + i
+				anio = ANIO_INICIAL + i
 				if anio == 2010 :
 					#alumnos[i] = linear_regression_predict(alumnos[:12], 1)[0]
 					alumnos[i] = alumnos[i - 1]
@@ -92,21 +101,15 @@ def cleanData(dataset_name) :
 	
 	with open(find_dataset('Clean' + dataset_name), mode = 'w') as archivo :
 		writer = csv.writer(archivo, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-		writer.writerow(["cct"] + [1998 + i for i in range(num_anios)])
+		writer.writerow(["cct"] + [ANIO_INICIAL + i for i in range(num_anios)])
 		
 		for i in range(dataset.shape[0]) :
 			row = np.array(dataset.loc[i])
 			cct = row[0]
 			row = row[1:]
 			
-			# Para grupos
-			"""
-			for j in range(1, len(row)) :
-				if row[j] == 0 :
-					row[j] = row[j - 1]
-			"""
-			
 			# Para alumnos
+			"""
 			zero_index = np.where(row == 0)[0]
 			
 			if len(zero_index) == 1 :
@@ -114,6 +117,14 @@ def cleanData(dataset_name) :
 				if zero_index >= 5 :
 					# Al menos cinco años para predecir
 					row[zero_index] = int(linear_regression_predict(row[:zero_index], 1)[0])
+			"""
+			
+			# Para grupos
+			
+			for j in range(1, len(row)) :
+				if row[j] == 0 :
+					row[j] = row[j - 1]
+			
 			
 			if not np.any(row <= 0) :
 				writer.writerow(np.concatenate((np.array([cct]), row)))
@@ -139,7 +150,7 @@ def sortData(csv_file, save_as, reverse = False) :
 	
 	with open(save_as + '.csv', mode='w') as archivo :
 		writer = csv.writer(archivo, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-		writer.writerow(["cct"] + [1998 + i for i in range(num_anios)])
+		writer.writerow(["cct"] + [ANIO_INICIAL + i for i in range(num_anios)])
 		
 		for i in range(n) :
 			writer.writerow(np.array(dataset.loc[index_list[i][1]]))
@@ -153,7 +164,7 @@ def filterData(csv_file, save_as, custom_function) :
 	
 	with open(save_as + '.csv', mode='w') as archivo :
 		writer = csv.writer(archivo, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-		writer.writerow(["cct"] + [1998 + i for i in range(num_anios)])
+		writer.writerow(["cct"] + [ANIO_INICIAL + i for i in range(num_anios)])
 		
 		for i in range(n) :
 			if custom_function(np.array(dataset.loc[i][1:])) :
@@ -162,4 +173,5 @@ def filterData(csv_file, save_as, custom_function) :
 	print('Archivo guardado como', save_as + '.csv')
 	
 if __name__ == '__main__' :
-	pass
+	crearCSV("GruposSecundaria")
+	cleanData("GruposSecundaria")

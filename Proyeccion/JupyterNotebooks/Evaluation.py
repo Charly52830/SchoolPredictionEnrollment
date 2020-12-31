@@ -6,10 +6,11 @@ sys.path.append(parentdir)
 
 import numpy as np
 import pandas as pd
+
 from Metodos.LinearRegression import linear_regression_predict, base_linear_regression
 from Metodos.AutoARIMA import auto_arima_predict
 from Metodos.IndividualANN import individual_ann 
-from Entrenamiento.Normalizators import MinMaxNormalizator, DummyNormalizator, DifferencingNormalizator
+from Metodos.Normalizators import MinMaxNormalizator
 
 class TestResult :
     """Clase que contiene los resultados de las métricas de evaluación. La clase
@@ -217,4 +218,3 @@ if __name__ == '__main__' :
 	print("RMSE: %.3lf" % (rmse))
 	print("MAPE: %.3lf" % (mape))
 	print("RP: %.3lf" % (rp))
-	

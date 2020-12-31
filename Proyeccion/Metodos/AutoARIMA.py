@@ -6,7 +6,7 @@ sys.path.append(parentdir)
 
 import numpy as np
 from pmdarima.arima import auto_arima
-from Entrenamiento.Normalizators import MinMaxNormalizator, DummyNormalizator, DifferencingNormalizator
+from Metodos.Normalizators import MinMaxNormalizator
 
 def train_auto_arima(data) :
 	"""

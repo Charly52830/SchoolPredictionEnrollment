@@ -1,5 +1,13 @@
+# Manejo de módulos
+import os, sys
+currentdir = os.path.dirname(os.path.realpath(__file__))
+parentdir = os.path.dirname(currentdir)
+sys.path.append(parentdir)
+
 import numpy as np
 from sklearn.linear_model import LinearRegression
+
+from Metodos.Normalizators import MinMaxNormalizator
 
 def linear_regression(data, prediction_size, window_len) :
 	"""Función que realiza una predicción utilizando los últimos window_len datos
@@ -128,8 +136,41 @@ def base_linear_regression(data, prediction_size, window_len = -1) :
 	y_pred = model.predict(x_pred)
 	
 	return y_pred
+	
+def evaluate_and_predict_slr(data, prediction_size = 5, normalizators = [MinMaxNormalizator]) :
+	"""
+	"""
+
+	assert(len(data) >= 2)
+
+	# Aplicar las normalizaciones
+	norms = []
+	for i in range(len(normalizators)) :
+		normalizator = normalizators[i](data)
+		data = normalizator.normalize(data)
+		norms.append(normalizator)
+
+	# Entrenar el modelo
+	x = np.array([i for i in range(len(data))]).reshape((-1, 1))
+	y = data.reshape((-1, 1))
+	model = LinearRegression().fit(x, y)
+
+	# Obtener predicción futura
+	y_hat = np.array([i + len(data) for i in range(prediction_size)]).reshape((-1, 1))
+	prediction = model.predict(y_hat)
+
+	# Obtener la predicción del conjunto de los datos de entrenamiento
+	train_prediction = model.predict(x)
+
+	# Aplicar las desnormalizaciones en el orden inverso
+	for i in range(len(norms) - 1, -1, -1) :
+		train_prediction = norms[i].denormalize(train_prediction)
+		prediction = norms[i].denormalize(prediction)
+		
+	return prediction, train_prediction
 
 if __name__ == '__main__' :
+	from Normalizators import MinMaxNormalizator
 	escuela = np.array([377,388,392,394,408,405,426,403,414,412,424,438,452,443,429,430,428])
 	prediction = base_linear_regression(
 		data = escuela,

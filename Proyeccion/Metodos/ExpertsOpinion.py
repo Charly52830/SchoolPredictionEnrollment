@@ -1,14 +1,13 @@
-# Manejo de módulos
 import os, sys
 currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 
 import numpy as np
-from Metodos.IndividualANN import individual_ann, evaluate_and_predict_ann
+from Metodos.IndividualANN import evaluate_and_predict_ann
 from Metodos.FuzzyTimeSeries import hyperopt_fts_predict, evaluate_and_predict_fts
 from Metodos.AutoARIMA import auto_arima_predict, evaluate_and_predict_arima
-from Entrenamiento.Normalizators import MinMaxNormalizator
+from Metodos.Normalizators import MinMaxNormalizator
 
 def weightless_ep(data, prediction_size, experts = []) :
 	"""Función de predicción que toma la opinión de distintos métodos de
@@ -49,7 +48,7 @@ def evaluate_and_predict_ep(data, prediction_size = 5,
 		args['data'] = data
 		args['prediction_size'] = prediction_size
 		prediction, train_prediction = expert(**args)
-		print(prediction)
+		#print(prediction)
 		global_prediction += prediction
 		global_train_prediction += train_prediction
 	
