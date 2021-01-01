@@ -267,21 +267,46 @@ def actualizar_datos_estado() :
         f = open("DatosGenerales.json", "r")
         escuelas = json.load(f)['result'][0]
         
+        # Borrar registros que no son escuelas
+        if '@type' in escuelas :
+            escuelas.pop('@type')
+        if '@version' in escuelas :
+            escuelas.pop('@version')
+        
+        assert(csv_proyeccion_matricula.shape[0] == len(escuelas))
+        
     except FileNotFoundError :
         print("Error al cargar los datos.")
         print("Para generarlos ejecuta los siguientes comandos")
         print("$ python3.6 UpdateScript.py actualizar_datos_generales")
         print("$ python3.6 UpdateScript.py actualizar_proyeccion")
 
-    datos_sistema = dict()
+    datos_completos_escuelas = dict()
     for i in range(csv_proyeccion_matricula.shape[0]) :
         row = np.array(csv_proyeccion_matricula.loc[i])
         cct = row[0]
+        
         escuela = {
-            
+            "primer_anio" : int(escuelas[cct]["primer_anio"]),
+            "matricula" : escuelas[cct]["matricula"],
+            "pred" : list(map(int, row[1:6])),
+            "mae" : row[6],
+            "rmse" : row[7],
+            "mape" : row[8],
+            "rp" : row[9],
+            "metodo" : row[10],
+            "nombre" : escuelas[cct]["nombre"],
+            "nivel" : escuelas[cct]["nivel"],
+            "mun" : escuelas[cct]["mun"],
+            "lat" : escuelas[cct]["lat"],
+            "lng" : escuelas[cct]["lng"],
+            "region" : escuelas[cct]["region"]
         }
-        #print(row)
-        datos_sistema[cct] = escuela
+        datos_completos_escuelas[cct] = escuela
+    
+    with open("DatosEscuelas.json", "w+") as outfile:  
+        json.dump(datos_completos_escuelas, outfile, separators=(',', ':')) 
+    print("Datos guardados en el archivo DatosEscuelas.json")
 
 def comando_no_encontrado() :
     info = """
@@ -328,7 +353,8 @@ def cargar_comando() :
 if __name__ == "__main__" :    
     comando = cargar_comando()
     parametros = cargar_parametros()
-    
+    comando()
+    """
     try :
         if comando == comando_no_encontrado :
             comando()
@@ -336,3 +362,4 @@ if __name__ == "__main__" :
             comando(**parametros)
     except TypeError :
         print("Error: Se especificó incorrectamente alguno de los parametros")
+    """

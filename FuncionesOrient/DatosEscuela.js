@@ -1,5 +1,21 @@
 /**
- * Función que devuelve los generales de una escuela.
+ * Función que devuelve los generales de una escuela si se considera activa.
+ * Una escuela es activa si su estatus es ACTIVO y si tiene al menos el 70% de 
+ * datos de la matrícula y el grupo a partir del primer año en el que aparece
+ * en la base de datos.
+ * 
+ * Realiza una limpieza de los datos, de forma que los datos de la matrícula o el
+ * grupo que se encuentren en cero los sustituye por el promedio de los datos que 
+ * no se encuentran en cero.
+ *
+ * Devuelve además de la matrícula, el promedio de la tasa de alumnos por grupo, nivel,
+ * latitud, longitud, municipio, región y nombre de la escuela.
+ * 
+ * param escuela_o_cct: cct de la escuela (string) u objeto escuela.
+ * param forzar_inactiva: si es true devuelve los datos de la escuela incluso si se considera
+ *   inactiva.
+ *
+ * returns objeto json con los datos generales de la escuela.
  */
 
 var limpiar_anios_en_cero = function(anios, valores) {

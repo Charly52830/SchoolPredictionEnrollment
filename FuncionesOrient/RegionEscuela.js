@@ -1,3 +1,16 @@
+/**
+ * Función que obtiene la región de una escuela.
+ *
+ * Notas importantes:
+ * (31/12/2020): 
+ * - Por motivos del diccionario, solo se puede obtener la región de las escuelas que tengan
+ * datos después del 2016.
+ *
+ * param escuela_o_cct: cct de la escuela (string) u objeto escuela.
+ * 
+ * returns clave de la región a la que pertenece la escuela.
+ */
+
 var formato_anio = function(anio) {
   if(anio < 10) 
     return "0" + anio.toString();

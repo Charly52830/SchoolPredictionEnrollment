@@ -46,12 +46,12 @@ def display_page(pathname, data):
         
         return reporte.cargar_plantilla_reporte(
             contenido = reporte.cargar_layout_reporte_general(
-                escuelas = reporte.ordenar_escuelas(json.loads(data['json_data']))
+                escuelas = reporte.ordenar_escuelas(data['escuelas'])
             )
         )
     elif re.search('^/apps/reporte/32[A-Z]{3}[0-9]{4}[A-Z]{1}', pathname) and data['session_active'] :
         # Verificar que exista una sesión, si no, regresar 404
-        escuelas_reporte = json.loads(data['json_data'])
+        escuelas_reporte = data['escuelas']
         cct = pathname[-10:]
         
         if not cct in escuelas_reporte :

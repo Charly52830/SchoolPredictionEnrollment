@@ -5,7 +5,7 @@
  * Los datos se obtienen a través de un objeto inmueble conectado al nodo de una escuela
  * en la base de datos.
  *
- * param escuela_o_cct: cct de la escuela (string) u objeto escuela.
+ * param cct_o_escuela: cct de la escuela (string) u objeto escuela.
  *
  * returns objeto json con 3 datos: latitud, longitud y municipio de la escuela.
  */

@@ -17,6 +17,13 @@ from dash.exceptions import PreventUpdate
 
 from app import app
 
+METODOS = {
+    "EP" : "opinión de expertos",
+    "NF" : "proyección ingenua",
+    "SLR" : "regresión lineal simple",
+    "ARIMA" : "el modelo ARIMA"
+}
+
 def ordenar_escuelas(escuelas) :
     escuelas_ordenadas = OrderedDict()
     CCTS_ordenados = [(np.array(escuelas[cct]["matricula"]).mean(), cct) for cct in escuelas]
@@ -238,12 +245,20 @@ def generar_mapa_individual(escuela, cct) :
     return mapa
 
 def generar_correlograma(escuela, cct, es_acf = True) :
+    """
+    """
     if es_acf :
-        correlacion = np.array(acf(escuela, nlags = len(escuela)))
         title = "ACF de %s" % (cct)
+        if len(escuela) == 1 :
+            correlacion = np.array([1])
+        else :
+            correlacion = np.array(acf(escuela, nlags = len(escuela) - 1))
     else :
         title = "PACF de %s" % (cct)
-        correlacion = np.array(pacf(escuela, nlags = len(escuela)))
+        if len(escuela) == 1 :
+            correlacion = np.array([1])
+        else :
+            correlacion = np.array(pacf(escuela, nlags = len(escuela) - 1))
     
     # Create figure
     correlograma = go.Figure(data=[go.Bar(y=correlacion)])
@@ -284,7 +299,8 @@ def generar_correlograma(escuela, cct, es_acf = True) :
     return correlograma
 
 def generar_scatterplot(escuelas, show_legend = True, title = "Proyección de matrícula") :
-
+    """
+    """
     def add_trace(fig, cct, data, seed_year = 1998) :
         scatter = go.Scatter(
             x = ["%d-08-01" % (seed_year + i) for i in range(len(data))],
@@ -307,7 +323,8 @@ def generar_scatterplot(escuelas, show_legend = True, title = "Proyección de ma
         add_trace(
             fig = scatterplot,
             cct = cct,
-            data = matricula
+            data = matricula,
+            seed_year = escuelas[cct]['primer_anio']
         )
     
     # Add shapes
@@ -488,42 +505,50 @@ def generar_tabla_metricas(escuelas, links_requeridos = True) :
     )
 
 def generar_tabla_matricula(escuelas, links_requeridos = True) :
-    def obtener_matricula(cct) :
-        matricula = (escuelas[cct]["matricula"] + escuelas[cct]["pred"])[-10:]
-        matricula_y_color = [(mat, "black") for mat in matricula]
-        matricula_y_color[4] = (matricula[4], "#FF0055")
-        
-        return matricula_y_color
-    
+    """
+    """
+    # Cabecera de la tabla
     anio_actual = date.today().year
     nombre_columnas = ["cct"] + ["%d\n%d" % (anio, anio + 1) for anio in range(anio_actual - 5, anio_actual + 5)]
+    cabecera = html.Thead(html.Tr([html.Th(nombre_col, style = {"padding-left" : "0"}) for nombre_col in nombre_columnas]))
     
-    cuerpo_tabla = [html.Tr(
-        [html.Td(
-            html.A(cct, href = "reporte/%s" % (cct), id = "link-escuela") if links_requeridos else cct, 
-            style = {
-                "padding-left" : "0"
-            }
-        )] +
-        [html.Td(
-            matricula,
-            style = {
-                "padding-left" : "0",
-                "color" : color
-            }
-        ) for matricula, color in obtener_matricula(cct)]
-    ) for cct in escuelas]
+    # Cuerpo de la tabla
+    cuerpo = html.Tbody([
+        html.Tr(
+            # cct
+            [html.Td(
+                html.A(cct, href = "reporte/%s" % (cct), id = "link-escuela") if links_requeridos else cct,
+                style = {"padding-left" : "0"}
+            )] + 
+            # Últimos 4 años
+            [html.Td(
+                escuelas[cct]["matricula"][-(5 - i)] if len(escuelas[cct]["matricula"]) >= 5 - i else '',
+                style = {"padding-left" : "0"}
+            ) for i in range(4)] + 
+            # Último año de color rojo
+            [html.Td(
+                escuelas[cct]["matricula"][-1],
+                style = {
+                    "padding-left" : "0",
+                    "color" : "#FF0055"
+                }
+            )] + 
+            # Predicción
+            [html.Td(
+                pred,
+                style = {"padding-left" : "0"}
+            ) for pred in escuelas[cct]["pred"]]
+        )
+    for cct in escuelas])
     
-    layout_tabla = dbc.Table([
-        html.Thead(
-            html.Tr([html.Th(col, style = {"padding-left" : "0"}) for col in nombre_columnas]),
-        ),
-        html.Tbody(cuerpo_tabla)],
+    # Tabla
+    tabla = dbc.Table([
+        cabecera,
+        cuerpo],
         className = "table-responsive",
         style = {"font-size" : "small"}
     )
-    
-    return layout_tabla
+    return tabla
 
 def cargar_layout_reporte_general(escuelas) :
     scatterplot = generar_scatterplot(escuelas)
@@ -543,15 +568,6 @@ def cargar_layout_reporte_general(escuelas) :
                         "margin-bottom" : "0", 
                         "padding-bottom": "0"
                     },
-                ),
-                html.P(
-                    "* Proyección realizada utilizando opinión de expertos",
-                    className = "text-secondary",
-                    style = {
-                        "font-size" : "0.5rem", 
-                        "margin" : "0", 
-                        "padding" : "0"
-                    }
                 ),
                 html.P(
                     "* Fuente: estadística 911",
@@ -738,7 +754,7 @@ def cargar_layout_reporte_individual(escuelas, cct) :
             dbc.Col([
                 dcc.Graph(figure = scatterplot),
                 html.P(
-                    "* Proyección realizada utilizando opinión de expertos",
+                    "* Proyección realizada utilizando %s" % (METODOS[escuelas[cct]['metodo']]),
                     className = "text-secondary",
                     style = {"font-size" : "0.5rem", "margin" : "0 0 0 4rem", "padding" : "0"}
                 ),
@@ -750,12 +766,7 @@ def cargar_layout_reporte_individual(escuelas, cct) :
                 md = 6
             ),
             dbc.Col([
-                dcc.Graph(figure = mapa),
-                html.P(
-                    "* La ubicación es una aproximación de la posición real",
-                    className = "text-secondary",
-                    style = {"font-size" : "0.5rem", "margin" : "0 0 0 5rem", "padding" : "0"}
-                )],
+                dcc.Graph(figure = mapa)],
                 md = 6
             )]
         ),
@@ -808,7 +819,7 @@ def cargar_layout_reporte_individual(escuelas, cct) :
 )
 def controlar_botones_de_navegacion(pathname, data, napadas) :
     data = data or {'session_active' : False, 'json_data' : None}
-    CCTS = list(ordenar_escuelas(json.loads(data['json_data'])).keys())
+    CCTS = list(ordenar_escuelas(data['escuelas']).keys())
     
     if pathname == '/apps/reporte' and data['session_active'] :
         return True, False, "#", "reporte/%s" % (CCTS[0])
@@ -839,11 +850,14 @@ def controlar_botones_de_navegacion(pathname, data, napadas) :
 @app.callback(Output("descargar_csv", "data"), [Input("descargar_csv_button", "n_clicks")], [State("session", "data")])
 def generar_csv(n_clicks, data) :
     if n_clicks :
-        escuelas = ordenar_escuelas(json.loads(data['json_data']))
-        CCTS = list(escuelas.keys())
-        matricula = [[cct] + escuelas[cct]["matricula"] + escuelas[cct]['pred'] for cct in CCTS]
-        primer_anio = min((escuelas[cct]['primer_anio'] for cct in CCTS))
-        num_anios = len(matricula[0]) - 1
-        nombre_columnas = ["cct"] + ["%d-%d" % (anio, anio + 1) for anio in range(primer_anio, primer_anio + num_anios)]
+        escuelas = ordenar_escuelas(data['escuelas'])
+        primer_anio = min((escuelas[cct]['primer_anio'] for cct in escuelas))
+        ultimo_anio = max((len(escuelas[cct]['matricula']) + escuelas[cct]['primer_anio'] for cct in escuelas)) + 5
+        nombre_columnas = ["cct"] + ["%d-%d" % (anio, anio + 1) for anio in range(primer_anio, ultimo_anio)]
+        matricula = [
+            [cct] + [
+                (escuelas[cct]['matricula'] + escuelas[cct]['pred'])[anio - escuelas[cct]['primer_anio']] if anio >= escuelas[cct]['primer_anio'] else ''
+                for anio in range(primer_anio, ultimo_anio)]
+        for cct in escuelas]
         dataframe = pd.DataFrame(matricula, columns = nombre_columnas)
         return send_data_frame(dataframe.to_csv, filename = "matricula_escuelas.csv")

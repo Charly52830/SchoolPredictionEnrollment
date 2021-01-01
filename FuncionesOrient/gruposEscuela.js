@@ -1,8 +1,7 @@
 /**
 *	Función que obtiene el número de grupos en cada año de una escuela específica.
 *
-*	param cct_escuela: clave del centro de trabajo de la escuela (se aceptan
-*		escuelas de preescolar, primaria y secundaria).
+*	param escuela_o_cct: cct de la escuela (string) u objeto escuela.
 *
 *	return: arreglo que contiene otros 2 arreglos de la misma longitud:
 *		- x: años en los que se encontró registros de alumnos
