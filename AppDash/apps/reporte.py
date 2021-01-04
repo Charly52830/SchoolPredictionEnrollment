@@ -34,68 +34,78 @@ def ordenar_escuelas(escuelas) :
     
     return escuelas_ordenadas
 
-botones_sidebar = dbc.Col(
-    [
-        html.A(
-            dbc.Button(
-                html.I(className = "fas fa-chart-line"),
-                style = {
-                    "margin-top" : "1rem"
-                },
-            ),
-            href="/apps/reporte"
+botones_sidebar = dbc.Col([
+    html.A(
+        dbc.Button(
+            html.I(className = "fas fa-chart-line"),
+            style = {"margin-top" : "1rem"},
         ),
-        html.Br(),
-        dcc.Link(
-            dbc.Button(
-                html.I(className = "fas fa-arrow-left"), 
-                id = 'previous_button', 
-                style = {
-                    "margin-top" : "1rem"
-                }
-            ),
-            href = "#",
-            id = "previous-link"
+        href="/apps/reporte"
+    ),
+    html.Br(),
+    dcc.Link(
+        dbc.Button(
+            html.I(className = "fas fa-arrow-left"), 
+            id = 'previous_button', 
+            style = {"margin-top" : "1rem"}
         ),
-        html.Br(),
-        dcc.Link(
-            dbc.Button(
-                html.I(className="fas fa-arrow-right"), 
-                id = 'next_button',
-                style = {
-                    "margin-top" : "1rem"
-                },
-            ),
-            href = "#",
-            id = "next-link"
+        href = "#",
+        id = "previous-link"
+    ),
+    html.Br(),
+    dcc.Link(
+        dbc.Button(
+            html.I(className="fas fa-arrow-right"), 
+            id = 'next_button',
+            style = {"margin-top" : "1rem"},
         ),
-        html.Hr(style = {"margin-bottom" : "0"}),
-        dbc.Button([html.I(className="fas fa-share-alt")], id = 'share_button', style = {"margin-top" : "1rem"}),
-        html.Br(),
-        dbc.Button([html.I(className="fas fa-file-pdf")], id = 'pdf_button', style = {"margin-top" : "1rem"}),
-        html.Br(),
-        dbc.Button([html.I(className="fas fa-file-excel")], id = 'excel_button', style = {"margin-top" : "1rem"}),
-        html.Hr(style = {"margin-bottom" : "0"}),
-        dbc.Button([html.I(className="fas fa-question-circle")], id = 'help_button', style = {"margin-top" : "1rem"}),
-    ],
+        href = "#",
+        id = "next-link"
+    ),
+    html.Hr(style = {"margin-bottom" : "0"}),
+    dbc.Button([
+        html.I(className="fas fa-share-alt")], 
+        id = 'share_button', 
+        style = {"margin-top" : "1rem"}
+    ),
+    html.Br(),
+    dbc.Button([
+        html.I(className="fas fa-file-pdf")],
+        id = 'pdf_button',
+        style = {"margin-top" : "1rem"}
+    ),
+    html.Br(),
+    dbc.Button([
+        html.I(className="fas fa-file-excel")], 
+        id = 'excel_button', 
+        style = {"margin-top" : "1rem"}
+    ),
+    html.Hr(style = {"margin-bottom" : "0"}),
+    dbc.Button([
+        html.I(className="fas fa-question-circle")],
+        id = 'help_button',
+        style = {"margin-top" : "1rem"}
+    )],
 )
 
-sidebar = dbc.Navbar(
-    [
-        html.A(
-            # Use row and col to control vertical alignment of logo / brand
-            dbc.Row(
-                [
-                    dbc.Col(dbc.Button([html.I(className="fas fa-home")], id = 'home_button')),
-                ],
-                align="center",
-                no_gutters=True,
-            ),
-            href="/",
+sidebar = dbc.Navbar([
+    html.A(
+        dbc.Row([
+            dbc.Col(dbc.Button([
+                html.I(className="fas fa-home")], 
+                id = 'home_button')
+            )],
+            align="center",
+            no_gutters=True,
         ),
-        dbc.NavbarToggler(id="navbar-toggler"),
-        dbc.Collapse(botones_sidebar, id="navbar-collapse", navbar=True),
-    ],
+        href="/",
+    ),
+    dbc.NavbarToggler(id = "navbar-toggler"),
+    dbc.Collapse(
+        botones_sidebar, 
+        id = "navbar-collapse", 
+        navbar = True
+    )],
     color="#e6e6e6",
     style = {
         "position" : "fixed",
@@ -109,46 +119,51 @@ sidebar = dbc.Navbar(
 )
 
 def cargar_plantilla_reporte(contenido) :
+    """
+    """
     layout = html.Div([
         # Content
-        html.Div(
-            [
-                # Navbar
-                dbc.Navbar(
-                    [
-                        dbc.Row(
-                            dbc.Col(dbc.Input(type="text", placeholder="Reporte sin titulo", style = {"text-align":"center"} )),
-                            no_gutters=True,
-                            className="d-flex justify-content-center",
-                            align="center",
-                        ),
-                        dbc.Row(
-                            dbc.Col(
-                                "%02d/%02d/%d" % (date.today().day, date.today().month, date.today().year), 
-                                style = {"font-size" : "small", "color" : "#5a6268", "margin-top" : "3px"}
-                            ),
-                            no_gutters=True,
-                            className="d-flex justify-content-center",
-                            align="center",
-                        ),
-                    ],
-                    className = "d-flex justify-content-center flex-column",
-                    style = {
-                        "border-style" : "solid none solid none", 
-                        "border-width" : "thin", 
-                        "border-color" : "#e6e6e6", 
-                        "padding-top" : "5px",
-                        "padding-bottom" : "3px",
-                    }
+        html.Div([
+            # Navbar
+            dbc.Navbar([
+                dbc.Row(
+                    dbc.Col(dbc.Input(
+                        type = "text",
+                        placeholder = "Reporte sin titulo", 
+                        style = {"text-align":"center"}
+                    )),
+                    no_gutters = True,
+                    className = "d-flex justify-content-center",
+                    align = "center",
                 ),
-                html.Div(contenido, id = 'contenido-reporte'),
-            ],
+                dbc.Row(
+                    dbc.Col(
+                        "%02d/%02d/%d" % (date.today().day, date.today().month, date.today().year), 
+                        style = {
+                            "font-size" : "small", 
+                            "color" : "#5a6268", 
+                            "margin-top" : "3px"
+                        }
+                    ),
+                    no_gutters = True,
+                    className = "d-flex justify-content-center",
+                    align = "center",
+                )],
+                className = "d-flex justify-content-center flex-column",
+                style = {
+                    "border-style" : "solid none solid none", 
+                    "border-width" : "thin", 
+                    "border-color" : "#e6e6e6", 
+                    "padding-top" : "5px",
+                    "padding-bottom" : "3px",
+                }
+            ),
+            html.Div(contenido, id = 'contenido-reporte')],
             style = {"margin-left" : "5rem"},
         ),
         # Sidebar
         sidebar,
     ])
-    
     return layout
 
 # Callback para que salga el botón en la barra de navegación cuando la pantalla es pequeña
@@ -163,7 +178,8 @@ def toggle_navbar_collapse(n, is_open):
     return is_open
 
 def generar_mapa_general(escuelas) :
-
+    """
+    """
     escuelas_por_nivel = {
         "Preescolar" : [],
         "Primaria" : [],
@@ -218,6 +234,8 @@ def generar_mapa_general(escuelas) :
     return mapa
 
 def generar_mapa_individual(escuela, cct) :
+    """
+    """
     mapa = go.Figure(go.Scattermapbox(
         lat = [escuela["lat"]],
         lon = [escuela["lng"]],
@@ -435,6 +453,8 @@ def generar_scatterplot(escuelas, show_legend = True, title = "Proyección de ma
     return scatterplot
 
 def generar_boxplot(escuelas, show_legend = True, title = 'Box plot de la matrícula escolar') :
+    """
+    """
     # Create figure
     boxplot = go.Figure()
     
@@ -478,6 +498,8 @@ def generar_boxplot(escuelas, show_legend = True, title = 'Box plot de la matrí
     return boxplot
 
 def generar_tabla_metricas(escuelas, links_requeridos = True) :
+    """
+    """
     return dbc.Table([
         html.Thead(
             html.Tr([
@@ -510,7 +532,14 @@ def generar_tabla_matricula(escuelas, links_requeridos = True) :
     # Cabecera de la tabla
     anio_actual = date.today().year
     nombre_columnas = ["cct"] + ["%d\n%d" % (anio, anio + 1) for anio in range(anio_actual - 5, anio_actual + 5)]
-    cabecera = html.Thead(html.Tr([html.Th(nombre_col, style = {"padding-left" : "0"}) for nombre_col in nombre_columnas]))
+    cabecera = html.Thead(
+        html.Tr([
+            html.Th(
+                nombre_col,
+                style = {"padding-left" : "0"}
+            ) for nombre_col in nombre_columnas]
+        )
+    )
     
     # Cuerpo de la tabla
     cuerpo = html.Tbody([
@@ -551,6 +580,8 @@ def generar_tabla_matricula(escuelas, links_requeridos = True) :
     return tabla
 
 def cargar_layout_reporte_general(escuelas) :
+    """
+    """
     scatterplot = generar_scatterplot(escuelas)
     boxplot = generar_boxplot(escuelas)
     tabla_metricas = generar_tabla_metricas(escuelas)
@@ -617,12 +648,15 @@ def cargar_layout_reporte_general(escuelas) :
                 tabla_metricas],
                 md = 6,
             )]
-        )]  # Final tercer renglón
+        )],  # Final tercer renglón
+        style = {"background" : "#FFFFFF"},
+        fluid = True
     )
     return layout_reporte
     
 def cargar_layout_reporte_individual(escuelas, cct) :
-
+    """
+    """
     scatterplot = generar_scatterplot(
         {cct : escuelas[cct]}, 
         show_legend = False, 
@@ -660,95 +694,106 @@ def cargar_layout_reporte_individual(escuelas, cct) :
     # Crear layout de la página
     layout_reporte_individual = dbc.Container([
         dbc.Row([
-            dbc.Col(dbc.Card(dbc.CardBody(dbc.Container(dbc.Row([
-                dbc.Col([
-                    html.H6("Nombre de la escuela", className = "card-title", style = {"font-weight":"bold"}),
-                    html.P(
-                        escuelas[cct]["nombre"],
-                        className = "card-text"
-                    )], 
-                    width = 10, 
-                    style = {"margin":"0", "padding":"0"}
+            dbc.Col(
+                dbc.Card(dbc.CardBody(dbc.Container(dbc.Row([
+                    dbc.Col([
+                        html.H6("Nombre de la escuela", className = "card-title", style = {"font-weight":"bold"}),
+                        html.P(
+                            escuelas[cct]["nombre"],
+                            className = "card-text"
+                        )], 
+                        width = 10, 
+                        style = {"margin":"0", "padding":"0"}
+                    ),
+                    dbc.Col(
+                        html.I(className="fas fa-user-circle"),
+                        width = 2,
+                        style = {
+                            "margin" : "0", "padding" : "0",
+                            "margin-top" : "auto", "margin-bottom" : "auto",
+                            "font-size" : "2rem"
+                        }, 
+                        className = "d-flex justify-content-center"
+                    )]))),
+                    style = {"margin-top" : "1rem"}
                 ),
-                dbc.Col(
-                    html.I(className="fas fa-user-circle"),
-                    width = 2,
-                    style = {
-                        "margin" : "0", "padding" : "0",
-                        "margin-top" : "auto", "margin-bottom" : "auto",
-                        "font-size" : "2rem"
-                    }, 
-                    className = "d-flex justify-content-center"
-                )])))),
                 md = 3
             ),
-            dbc.Col(dbc.Card(dbc.CardBody(dbc.Container(dbc.Row([
-                dbc.Col([
-                    html.H6("Clave del centro de trabajo", className = "card-title", style = {"font-weight" : "bold"}),
-                    html.P(
-                        cct,
-                        className = "card-text"
-                    )], 
-                    width = 10, 
-                    style = {"margin":"0", "padding":"0"}
+            dbc.Col(
+                dbc.Card(dbc.CardBody(dbc.Container(dbc.Row([
+                    dbc.Col([
+                        html.H6("Clave del centro de trabajo", className = "card-title", style = {"font-weight" : "bold"}),
+                        html.P(
+                            cct,
+                            className = "card-text"
+                        )], 
+                        width = 10, 
+                        style = {"margin":"0", "padding":"0"}
+                    ),
+                    dbc.Col(
+                        html.I(className="fas fa-graduation-cap"),
+                        width = 2,
+                        style = {
+                            "margin" : "0", "padding" : "0",
+                            "margin-top" : "auto", "margin-bottom" : "auto",
+                            "font-size" : "2rem"
+                        }, 
+                        className = "d-flex justify-content-center"
+                    )]))),
+                    style = {"margin-top" : "1rem"}
                 ),
-                dbc.Col(
-                    html.I(className="fas fa-graduation-cap"),
-                    width = 2,
-                    style = {
-                        "margin" : "0", "padding" : "0",
-                        "margin-top" : "auto", "margin-bottom" : "auto",
-                        "font-size" : "2rem"
-                    }, 
-                    className = "d-flex justify-content-center"
-                )])))),
                 md = 4
             ),
-            dbc.Col(dbc.Card(dbc.CardBody(dbc.Container(dbc.Row([
-                dbc.Col([
-                    html.H6("Municipio", className = "card-title", style = {"font-weight":"bold"}),
-                    html.P(
-                        escuelas[cct]["mun"],
-                        className = "card-text"
-                    )], 
-                    width = 10, 
-                    style = {"margin":"0", "padding":"0"}
+            dbc.Col(
+                dbc.Card(dbc.CardBody(dbc.Container(dbc.Row([
+                    dbc.Col([
+                        html.H6("Municipio", className = "card-title", style = {"font-weight":"bold"}),
+                        html.P(
+                            escuelas[cct]["mun"],
+                            className = "card-text"
+                        )], 
+                        width = 10, 
+                        style = {"margin":"0", "padding":"0"}
+                    ),
+                    dbc.Col(
+                        html.I(className="fas fa-map-marker-alt"),
+                        width = 2,
+                        style = {
+                            "margin" : "0", "padding" : "0",
+                            "margin-top" : "auto", "margin-bottom" : "auto",
+                            "font-size" : "2rem"
+                        }, 
+                        className = "d-flex justify-content-center"
+                    )]))),
+                    style = {"margin-top" : "1rem"}
                 ),
-                dbc.Col(
-                    html.I(className="fas fa-map-marker-alt"),
-                    width = 2,
-                    style = {
-                        "margin" : "0", "padding" : "0",
-                        "margin-top" : "auto", "margin-bottom" : "auto",
-                        "font-size" : "2rem"
-                    }, 
-                    className = "d-flex justify-content-center"
-                )])))),
                 md = 3
             ),
-            dbc.Col(dbc.Card(dbc.CardBody(dbc.Container(dbc.Row([
-                dbc.Col([
-                    html.H6("Nivel", className = "card-title", style = {"font-weight":"bold"}),
-                    html.P(
-                        escuelas[cct]["nivel"],
-                        className = "card-text"
-                    )], 
-                    width = 10, 
-                    style = {"margin":"0", "padding":"0"}
+            dbc.Col(
+                dbc.Card(dbc.CardBody(dbc.Container(dbc.Row([
+                    dbc.Col([
+                        html.H6("Nivel", className = "card-title", style = {"font-weight":"bold"}),
+                        html.P(
+                            escuelas[cct]["nivel"],
+                            className = "card-text"
+                        )], 
+                        width = 10, 
+                        style = {"margin":"0", "padding":"0"}
+                    ),
+                    dbc.Col(
+                        html.I(className="fas fa-book-reader"),
+                        width = 2,
+                        style = {
+                            "margin" : "0", "padding" : "0",
+                            "margin-top" : "auto", "margin-bottom" : "auto",
+                            "font-size" : "2rem"
+                        }, 
+                        className = "d-flex justify-content-center"
+                    )]))),
+                    style = {"margin-top" : "1rem"}
                 ),
-                dbc.Col(
-                    html.I(className="fas fa-book-reader"),
-                    width = 2,
-                    style = {
-                        "margin" : "0", "padding" : "0",
-                        "margin-top" : "auto", "margin-bottom" : "auto",
-                        "font-size" : "2rem"
-                    }, 
-                    className = "d-flex justify-content-center"
-                )])))),
                 md = 2
             )],
-            style = {"margin-top": "1rem"}
         ),
         dbc.Row([
             dbc.Col([
@@ -804,7 +849,9 @@ def cargar_layout_reporte_individual(escuelas, cct) :
                 tabla_metricas],
                 md = 6,
             )],
-        )]
+        )],
+        style = {"background" : "#FFFFFF"},
+        fluid = True
     )
     return layout_reporte_individual
 

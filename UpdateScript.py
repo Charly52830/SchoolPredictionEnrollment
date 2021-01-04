@@ -353,8 +353,6 @@ def cargar_comando() :
 if __name__ == "__main__" :    
     comando = cargar_comando()
     parametros = cargar_parametros()
-    comando()
-    """
     try :
         if comando == comando_no_encontrado :
             comando()
@@ -362,4 +360,3 @@ if __name__ == "__main__" :
             comando(**parametros)
     except TypeError :
         print("Error: Se especificó incorrectamente alguno de los parametros")
-    """
