@@ -26,11 +26,10 @@ def naive_forecasting_predict(data, prediction_size) :
 	prediction += data[-1]
 	return prediction
 
-def evaluate_and_predict_ann(data, prediction_size = 5, normalizators = [MinMaxNormalizator]) :
-    """
-    """
-    pass
-
 if __name__ == '__main__' :
-	# Aquí van las pruebas
-	pass
+	escuela = np.array([89,127,134,152,170,172,182,192,197,210,219,222,233,226,222,205,222])
+	prediccion = naive_forecasting_predict(
+	    data = escuela,
+	    prediction_size = 5
+	)
+	print(prediccion)

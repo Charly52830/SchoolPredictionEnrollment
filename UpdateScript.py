@@ -260,7 +260,6 @@ $ python3.6 UpdateScript.py actualizar_datos_generales
     print("Todas las escuelas han sido proyectadas")
     
 def actualizar_datos_estado() :
-    # Aqui
     try :
         #csv_proyeccion_matricula = open(".ProyeccionMatricula.csv", "w")
         csv_proyeccion_matricula = pd.read_csv(".ProyeccionMatricula.csv")
@@ -295,6 +294,7 @@ def actualizar_datos_estado() :
             "mape" : row[8],
             "rp" : row[9],
             "metodo" : row[10],
+            "PAG" : escuelas[cct]["prom_alumnos_grupo"],
             "nombre" : escuelas[cct]["nombre"],
             "nivel" : escuelas[cct]["nivel"],
             "mun" : escuelas[cct]["mun"],

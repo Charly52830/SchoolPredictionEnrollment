@@ -24,6 +24,8 @@ METODOS = {
     "ARIMA" : "el modelo ARIMA"
 }
 
+MAPBOX_TOKEN = open(".mapbox_token").read()
+
 def ordenar_escuelas(escuelas) :
     escuelas_ordenadas = OrderedDict()
     CCTS_ordenados = [(np.array(escuelas[cct]["matricula"]).mean(), cct) for cct in escuelas]
@@ -66,25 +68,29 @@ botones_sidebar = dbc.Col([
     dbc.Button([
         html.I(className="fas fa-share-alt")], 
         id = 'share_button', 
-        style = {"margin-top" : "1rem"}
+        style = {"margin-top" : "1rem"},
+        disabled = True
     ),
     html.Br(),
     dbc.Button([
         html.I(className="fas fa-file-pdf")],
         id = 'pdf_button',
-        style = {"margin-top" : "1rem"}
+        style = {"margin-top" : "1rem"},
+        disabled = True
     ),
     html.Br(),
     dbc.Button([
         html.I(className="fas fa-file-excel")], 
         id = 'excel_button', 
-        style = {"margin-top" : "1rem"}
+        style = {"margin-top" : "1rem"},
+        disabled = True
     ),
     html.Hr(style = {"margin-bottom" : "0"}),
     dbc.Button([
         html.I(className="fas fa-question-circle")],
         id = 'help_button',
-        style = {"margin-top" : "1rem"}
+        style = {"margin-top" : "1rem"},
+        disabled = True
     )],
 )
 
@@ -219,7 +225,8 @@ def generar_mapa_general(escuelas) :
     
     # Update layout
     mapa.update_layout(
-        mapbox_style = "carto-positron",
+        mapbox_accesstoken = MAPBOX_TOKEN,
+        mapbox_style = "light",
         mapbox = {
             # Centro de Zacatecas
             'center': go.layout.mapbox.Center(lat = 23.1719, lon = -102.861),
@@ -248,7 +255,8 @@ def generar_mapa_individual(escuela, cct) :
     
     # Update layout
     mapa.update_layout(
-        mapbox_style = "carto-positron",
+        mapbox_accesstoken = MAPBOX_TOKEN,
+        mapbox_style = "light",
         mapbox = {
             # Centro de Zacatecas
             'center': go.layout.mapbox.Center(lat = 23.1719, lon = -102.861),
@@ -500,6 +508,29 @@ def generar_boxplot(escuelas, show_legend = True, title = 'Box plot de la matrí
 def generar_tabla_metricas(escuelas, links_requeridos = True) :
     """
     """
+    
+    colores_metricas = [
+        "#4DD500",
+        "#90D900",
+        "#D5DD00",
+        "#E1A500",
+        "#E56300",
+    ]
+    
+    def color_por_alumnos_promedio(error, PAG) :
+        x = PAG / 4
+        for i in range(1, 4) :
+            if error < i * x :
+                return colores_metricas[i - 1]
+
+        return colores_metricas[-1]
+
+    def color_por_porcentage(error) :
+        for i in range(1, 4) :
+            if error < i * 0.125 :
+                return colores_metricas[i - 1]
+        return colores_metricas[-1]
+    
     return dbc.Table([
         html.Thead(
             html.Tr([
@@ -518,10 +549,32 @@ def generar_tabla_metricas(escuelas, links_requeridos = True) :
                         "padding-left" : "0"
                     }
                 ),
-                html.Td(escuelas[cct]["mae"]),
-                html.Td(escuelas[cct]["rmse"]),
-                html.Td(escuelas[cct]["mape"]),
-                html.Td(escuelas[cct]["rp"])] 
+                html.Td(
+                    escuelas[cct]["mae"],
+                    style = {"color" : color_por_alumnos_promedio(
+                        error = escuelas[cct]["mae"],
+                        PAG = escuelas[cct]["PAG"]
+                    )}
+                ),
+                html.Td(
+                    escuelas[cct]["rmse"],
+                    style = {"color" : color_por_alumnos_promedio(
+                        error = escuelas[cct]["rmse"],
+                        PAG = escuelas[cct]["PAG"]
+                    )}
+                ),
+                html.Td(
+                    escuelas[cct]["mape"],
+                    style = {"color" : color_por_porcentage(
+                        error = escuelas[cct]["mape"]
+                    )}
+                ),
+                html.Td(
+                    escuelas[cct]["rp"],
+                    style = {"color" : color_por_porcentage(
+                        error = escuelas[cct]["rp"]
+                    )}
+                )] 
             ) for cct in escuelas]
         )]
     )

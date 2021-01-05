@@ -45,7 +45,7 @@ def auto_arima_predict(data, prediction_size, normalizators = []) :
 		prediction_size (int): número de años a predecir.
 		normalizators (:list: `Normalizator`): lista de objetos Normalizator. Las 
 			normalizaciones se aplican en el orden en el que se encuentran en la 
-			lista y se encuentran en el directorio Entrenamiento/Normalizators.
+			lista y se encuentran en el directorio Metodos/Normalizators.
 	
 	Returns:
 		(:obj: `numpy.array`): numpy array con los valores de la predicción.
@@ -98,9 +98,10 @@ def evaluate_and_predict_arima(data, prediction_size = 5, normalizators = [MinMa
 	return prediction, train_prediction
 
 if __name__ == '__main__' :
-	escuela = np.array([89,127,134,152,170,172,182,192,197,210,219,222,233,226,222,205,222,229,241,275,330,357])
-	prediction, train_prediction = evaluate_and_predict_arima(
+	escuela = np.array([89,127,134,152,170,172,182,192,197,210,219,222,233,226,222,205,222])
+	prediccion = auto_arima_predict(
 		data = escuela,
-		OFFSET_ANIOS = 0
+		prediction_size = 5,
+		normalizators = [MinMaxNormalizator]
 	)
-	print(prediction.shape, train_prediction.shape)
+	print(prediccion)

@@ -1,15 +1,16 @@
+# Manejo de módulos
 import os, sys
 currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 
 import numpy as np
-from Metodos.IndividualANN import evaluate_and_predict_ann
+from Metodos.IndividualANN import individual_ann_predict, evaluate_and_predict_ann
 from Metodos.FuzzyTimeSeries import hyperopt_fts_predict, evaluate_and_predict_fts
 from Metodos.AutoARIMA import auto_arima_predict, evaluate_and_predict_arima
 from Metodos.Normalizators import MinMaxNormalizator
 
-def weightless_ep(data, prediction_size, experts = []) :
+def weightless_ep_predict(data, prediction_size, experts = []) :
 	"""Función de predicción que toma la opinión de distintos métodos de
 	predicción. Considera que todos los métodos tienen el mismo peso, por lo que
 	la predicción final es el promedio de todos los métodos en cada año.
@@ -48,7 +49,6 @@ def evaluate_and_predict_ep(data, prediction_size = 5,
 		args['data'] = data
 		args['prediction_size'] = prediction_size
 		prediction, train_prediction = expert(**args)
-		#print(prediction)
 		global_prediction += prediction
 		global_train_prediction += train_prediction
 	
@@ -56,8 +56,14 @@ def evaluate_and_predict_ep(data, prediction_size = 5,
 	
 
 if __name__ == '__main__' :
-	escuela = np.array([388,370,388,383,376,359,354,337,325,373,367,380,401,398,392,343,324,318,320,332,351,378])
-	prediction, train_prediction = evaluate_and_predict_ep(
-		data = escuela,
+	escuela = np.array([89,127,134,152,170,172,182,192,197,210,219,222,233,226,222,205,222])
+	prediccion = weightless_ep_predict(
+	    data = escuela,
+	    prediction_size = 5,
+	    experts = [
+		    (individual_ann_predict, dict(window_len = 5, normalizators = [MinMaxNormalizator])), 
+		    (hyperopt_fts_predict, dict(normalizators = [MinMaxNormalizator])), 
+		    (auto_arima_predict, dict(normalizators = [MinMaxNormalizator]))
+		]
 	)
-	print(prediction, train_prediction)
+	print(prediccion)

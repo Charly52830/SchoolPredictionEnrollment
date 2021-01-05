@@ -16,6 +16,7 @@ app.layout = html.Div([
     dcc.Store(id='session', storage_type='session'),
 ])
 
+"""
 layout = html.Div([
     html.H3('Index'),
     dcc.Link('Escuelas', href='/apps/escuelas'),
@@ -24,6 +25,102 @@ layout = html.Div([
     html.Br(),
     dcc.Link('Estado', href='/apps/estado'),
 ])
+"""
+layout = dbc.Container([
+    dbc.Row(
+        dbc.Col([
+            html.H2(
+                "Consulta la matrícula escolar en Zacatecas y crea reportes con la proyección de matrícula",
+                style = {"text-align" : "center", "margin-top" : "4rem", "margin-bottom" : "3rem"}
+            )],
+            md = 8,
+        ),
+        className = "justify-content-center"
+    ),
+    dbc.Row([
+            dbc.Col(
+                dbc.Container([
+                    dbc.Row(
+                        html.A(
+                            dbc.Button(
+                                html.I(
+                                    className = "fas fa-book",
+                                    style = {"font-size" : "7rem", "margin" : "1.5rem", "color" : "black"}
+                                ),
+                                type = "button",
+                                style = {"background" : "#1199EE", "border-color" : "#1199EE"}
+                            ),
+                            href = "/apps/escuelas"
+                        ),
+                        justify="center"
+                    ),
+                    dbc.Row(
+                        html.H5("Por escuelas"),
+                        justify="center",
+                        style = {"margin-top" : "0.5rem"}
+                    )]
+                ),
+                md = 3,
+                style = {"margin-bottom" : "3rem", "margin-right" : "1rem", "margin-top" : "1rem"},
+                className = "d-flex justify-content-center"
+            ),
+            dbc.Col(
+                dbc.Container([
+                    dbc.Row(
+                        html.A(
+                            dbc.Button(
+                                html.I(
+                                    className = "fas fa-chart-bar",
+                                    style = {"font-size" : "7rem", "margin" : "1.5rem", "color" : "black"}
+                                ),
+                                type = "button",
+                                style = {"background" : "#1199EE", "border-color" : "#1199EE"},
+                                disabled = True
+                            ),
+                            href = "#"
+                        ),
+                        justify="center"
+                    ),
+                    dbc.Row(
+                        html.H5("Por región"),
+                        justify="center",
+                        style = {"margin-top" : "0.5rem"}
+                    )]
+                ),
+                md = 3,
+                style = {"margin-bottom" : "3rem", "margin-right" : "1rem", "margin-top" : "1rem"},
+                className = "d-flex justify-content-center"
+            ),
+            dbc.Col(
+                dbc.Container([
+                    dbc.Row(
+                        html.A(
+                            dbc.Button(
+                                html.I(
+                                    className = "fas fa-map-marker-alt",
+                                    style = {"font-size" : "7rem", "margin" : "1.5rem 2rem 1.5rem 2rem", "color" : "black"}
+                                ),
+                                type = "button",
+                                style = {"background" : "#1199EE", "border-color" : "#1199EE"},
+                                disabled = True
+                            ),
+                            href = "#"
+                        ),
+                        justify="center"
+                    ),
+                    dbc.Row(
+                        html.H5("Por estado"),
+                        justify="center",
+                        style = {"margin-top" : "0.5rem"}
+                    )]
+                ),
+                md = 3,
+                style = {"margin-bottom" : "3rem", "margin-right" : "1rem", "margin-top" : "1rem"},
+                className = "d-flex justify-content-center"
+            )],
+            justify="center",
+        )]
+)
 
 @app.callback(
     [Output('page-content', 'children'),

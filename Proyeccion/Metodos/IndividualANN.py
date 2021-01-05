@@ -126,7 +126,7 @@ def train_individual_ann(data, window_len) :
 	
 	return model
 
-def individual_ann(data, prediction_size, window_len, normalizators = []) :
+def individual_ann_predict(data, prediction_size, window_len, normalizators = []) :
 	"""Función que entrena una red neuronal para una sola serie de tiempo y que
 	se entrena únicamente con los datos de la serie de tiempo.
 	
@@ -215,8 +215,11 @@ def evaluate_and_predict_ann(data, prediction_size = 5, window_len = 5, normaliz
 	return prediction, train_prediction
 
 if __name__ == '__main__' :
-	escuela = np.array([377,388,392,394,408,405,426,403,414,412,424,438,452,443,429,430,428])
-	prediction, train_prediction = evaluate_and_predict_ann(
-		data = escuela
+	escuela = np.array([89,127,134,152,170,172,182,192,197,210,219,222,233,226,222,205,222])
+	prediccion = individual_ann_predict(
+	    data = escuela,
+	    prediction_size = 5,
+	    window_len = 5,
+	    normalizators = [MinMaxNormalizator]
 	)
-	print(prediction, train_prediction)
+	print(prediccion)

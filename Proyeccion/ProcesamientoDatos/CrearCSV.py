@@ -130,47 +130,10 @@ def cleanData(dataset_name) :
 				writer.writerow(np.concatenate((np.array([cct]), row)))
 			else :
 				remove_counter += 1
-			
 	
 	print("Dataset limpiado. Archivo %s guardado en el directorio Datasets" % ('Clean' + dataset_name + '.csv'))
 	print("Registros eliminados: %d" % (remove_counter))
 	print("Registros totales finales: %d" % (dataset.shape[0] - remove_counter))
-
-def sortData(csv_file, save_as, reverse = False) :
-	dataset = pd.read_csv(csv_file)
-	n = dataset.shape[0]
-	num_anios = dataset.shape[1] - 1
-	assert(num_anios == 22)
-	
-	index_list = []
-	for i in range(n) :
-		index_list.append((np.array(dataset.loc[i][1:], dtype = float).mean(), i))
-	
-	index_list.sort(reverse = reverse)
-	
-	with open(save_as + '.csv', mode='w') as archivo :
-		writer = csv.writer(archivo, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-		writer.writerow(["cct"] + [ANIO_INICIAL + i for i in range(num_anios)])
-		
-		for i in range(n) :
-			writer.writerow(np.array(dataset.loc[index_list[i][1]]))
-	
-	print('Archivo guardado como', save_as + '.csv')
-
-def filterData(csv_file, save_as, custom_function) :
-	dataset = pd.read_csv(csv_file)
-	n = dataset.shape[0]
-	num_anios = dataset.shape[1] - 1
-	
-	with open(save_as + '.csv', mode='w') as archivo :
-		writer = csv.writer(archivo, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-		writer.writerow(["cct"] + [ANIO_INICIAL + i for i in range(num_anios)])
-		
-		for i in range(n) :
-			if custom_function(np.array(dataset.loc[i][1:])) :
-				writer.writerow(np.array(dataset.loc[i]))
-			
-	print('Archivo guardado como', save_as + '.csv')
 	
 if __name__ == '__main__' :
 	crearCSV("GruposSecundaria")

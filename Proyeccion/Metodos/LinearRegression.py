@@ -76,7 +76,7 @@ def best_prediction(X, Y, verbose = False) :
 	
 	return best_window
 
-def linear_regression_predict(data, prediction_size, validation_size = 1, verbose = False) :
+def linear_regression_predict(data, prediction_size, normalizators = [], validation_size = 1, verbose = False) :
 	"""Función que realiza una predicción utilizando regresión lineal. Primero
 	encuentra la cantidad de los últimos años que mejor predicen los datos de
 	los validation_size últimos años del arreglo data y después realiza la
@@ -86,6 +86,9 @@ def linear_regression_predict(data, prediction_size, validation_size = 1, verbos
 	Args:
 		data (:obj: `numpy.array`): datos de la observación.
 		prediction_size (int): número de años a predecir.
+		normalizators (:list: `Normalizator`): lista de objetos Normalizator. Las 
+			normalizaciones se aplican en el orden en el que se encuentran en la 
+			lista y se encuentran en el directorio Metodos/Normalizators.
 		validation_size (int): cantidad de los últimos datos considerados para 
 			para encontrar el valor de window_len que mejor prediga los datos.
 		
@@ -96,6 +99,14 @@ def linear_regression_predict(data, prediction_size, validation_size = 1, verbos
 		(:obj: `numpy.array`): numpy array de forma (prediction_size,) que contiene
 			los datos de la predicción.
 	"""
+	# Aplicar las normalizaciones
+	norms = []
+	for i in range(len(normalizators)) :
+		normalizator = normalizators[i](data)
+		data = normalizator.normalize(data)
+		norms.append(normalizator)
+	
+	# Entrenar el modelo
 	x_train = data[: -validation_size]
 	x_validation = data[-validation_size :]
 	
@@ -105,7 +116,14 @@ def linear_regression_predict(data, prediction_size, validation_size = 1, verbos
 		verbose = verbose
 	)
 	
-	return linear_regression(data, prediction_size, window_len)
+	# Obtener predicción
+	prediction = linear_regression(data, prediction_size, window_len)
+	
+	# Aplicar las desnormalizaciones en el orden inverso
+	for i in range(len(norms) - 1, -1, -1) :
+		prediction = norms[i].denormalize(prediction)
+	
+	return prediction
 
 def base_linear_regression(data, prediction_size, window_len = -1) :
 	"""Función que realiza una predicción de los próximos prediction_size datos
@@ -172,7 +190,10 @@ def evaluate_and_predict_slr(data, prediction_size = 5, normalizators = [MinMaxN
 	return prediction, train_prediction
 
 if __name__ == '__main__' :
-	from Normalizators import MinMaxNormalizator
-	escuela = np.array([8.0, 8.0, 8.0])
-	prediction, train_prediction = evaluate_and_predict_slr(escuela)
-	print(prediction.shape, train_prediction.shape)
+	escuela = np.array([89,127,134,152,170,172,182,192,197,210,219,222,233,226,222,205,222])
+	prediccion = linear_regression_predict(
+	    data = escuela,
+	    prediction_size = 5,
+	    normalizators = [MinMaxNormalizator]
+	)
+	print(prediccion)
