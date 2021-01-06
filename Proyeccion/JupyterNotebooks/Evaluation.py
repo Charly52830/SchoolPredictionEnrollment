@@ -201,8 +201,6 @@ class Model :
         return self.cached_sets[key]
 
 if __name__ == '__main__' :
-	#m = Model(base_linear_regression)
-	#m = Model(auto_arima_predict, {'normalizators' : [MinMaxNormalizator]})
 	m = Model(individual_ann, {'window_len' : 5, 'normalizators' : [MinMaxNormalizator]})
 	m.TEST_SIZE = 4
 	m.VALIDATION_SIZE = 0
@@ -216,4 +214,3 @@ if __name__ == '__main__' :
 	print("RMSE: %.3lf" % (rmse))
 	print("MAPE: %.3lf" % (mape))
 	print("RP: %.3lf" % (rp))
-	

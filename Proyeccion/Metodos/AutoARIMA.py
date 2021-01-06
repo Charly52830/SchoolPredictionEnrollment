@@ -9,7 +9,16 @@ from pmdarima.arima import auto_arima
 from Metodos.Normalizators import MinMaxNormalizator
 
 def train_auto_arima(data) :
-	"""
+	"""Función para entrenar un nuevo modelo ARIMA. Encuentra los mejores parámetros
+	p, d, q, P, D, Q que minimizan el error en la predicción.
+	
+	Args:
+	    data (:obj: `numpy.array`): arreglo con los datos de la serie de tiempo
+	        con dimensión (n,).
+	
+	Returns:
+	    model (:obj: `pmdarima.arima.arima.ARIMA`): modelo ARIMA entrenado
+	
 	"""
 	# Asignar el valor máximo de los parámetros p,d,q,P,D,Q
 	model = auto_arima(
@@ -32,7 +41,6 @@ def train_auto_arima(data) :
 		trace = False,
 		max_order = 10,
 	)
-	
 	return model
 
 def auto_arima_predict(data, prediction_size, normalizators = []) :
@@ -41,7 +49,7 @@ def auto_arima_predict(data, prediction_size, normalizators = []) :
 	
 	Args:
 		data (:obj: `numpy.array`): numpy array con los valores reales de la
-			observación.
+			serie de tiempo con dimensiones (n,).
 		prediction_size (int): número de años a predecir.
 		normalizators (:list: `Normalizator`): lista de objetos Normalizator. Las 
 			normalizaciones se aplican en el orden en el que se encuentran en la 
@@ -69,7 +77,28 @@ def auto_arima_predict(data, prediction_size, normalizators = []) :
 	return prediction
 
 def evaluate_and_predict_arima(data, prediction_size = 5, normalizators = [MinMaxNormalizator], OFFSET_ANIOS = 5) :
-	"""
+	"""Función que devuelve la predicción de los datos históricos y los datos
+	futuros aplicando el modelo ARIMA.
+	
+	Args:
+	    data (:obj: `numpy.array`): numpy array con los valores reales de la
+			serie de tiempo con dimensiones (n,).
+		prediction_size (int, opcional): número de años a predecir.
+		normalizators (:list: `Normalizator`, opcional): lista de objetos Normalizator. 
+			Las normalizaciones se aplican en el orden en el que se encuentran 
+			en la lista, las clases Normalizator se encuentran en el directorio 
+			Metodos/Normalizators.
+		OFFSET_ANIOS (int, opcional): número de años a remover de la predicción
+			histórica. Tienen que removerse los primeros 5 años para que esta
+			función pueda ser utilizada junto con IndividualANN en la opinión de
+			expertos, pero si esta función se va a utilizar por sí sola no hace
+			falta remover ningún año.
+	
+	Returns:
+		prediction (:obj: `numpy.array`): arreglo con la predicción futura con
+			dimensiones (prediction_size,).
+		train_prediction (:obj: `numpy.array`): arreglo con la predicción histórica
+			con dimensiones (n - OFFSET_ANIOS,).
 	"""
 	# Aplicar las normalizaciones
 	norms = []

@@ -156,9 +156,24 @@ def base_linear_regression(data, prediction_size, window_len = -1) :
 	return y_pred
 	
 def evaluate_and_predict_slr(data, prediction_size = 5, normalizators = [MinMaxNormalizator]) :
+	"""Función que devuelve la predicción de los datos históricos y los datos
+	futuros aplicando SLR.
+	
+	Args:
+	    data (:obj: `numpy.array`): numpy array con los valores reales de la
+			serie de tiempo con dimensiones (n,).
+		prediction_size (int, opcional): número de años a predecir.
+		normalizators (:list: `Normalizator`, opcional): lista de objetos Normalizator. 
+			Las normalizaciones se aplican en el orden en el que se encuentran 
+			en la lista, las clases Normalizator se encuentran en el directorio 
+			Metodos/Normalizators.
+	
+	Returns:
+		prediction (:obj: `numpy.array`): arreglo con la predicción futura con
+			dimensiones (prediction_size,).
+		train_prediction (:obj: `numpy.array`): arreglo con la predicción histórica
+			con dimensiones (n,).
 	"""
-	"""
-
 	assert(len(data) >= 2)
 
 	# Aplicar las normalizaciones
@@ -182,6 +197,7 @@ def evaluate_and_predict_slr(data, prediction_size = 5, normalizators = [MinMaxN
 
 	prediction = prediction.reshape((prediction_size,))
 	train_prediction = train_prediction.reshape((len(train_prediction), ))
+	
 	# Aplicar las desnormalizaciones en el orden inverso
 	for i in range(len(norms) - 1, -1, -1) :
 		train_prediction = norms[i].denormalize(train_prediction)

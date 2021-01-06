@@ -38,7 +38,23 @@ def weightless_ep_predict(data, prediction_size, experts = []) :
 
 def evaluate_and_predict_ep(data, prediction_size = 5, 
 	experts = [evaluate_and_predict_ann, evaluate_and_predict_arima, evaluate_and_predict_fts]) :
-	"""
+	"""Función que devuelve la predicción de los datos históricos y los datos
+	futuros aplicando Opinión de Expertos.
+	
+	Args:
+	    data (:obj: `numpy.array`): numpy array con los valores reales de la
+			serie de tiempo con dimensiones (n,).
+		prediction_size (int, opcional): número de años a predecir.
+		experts (list, opcional): lista de funciones con los métodos expertos.
+			Por defecto se utiliza el modelo ARIMA, FTS y ANN. Las normalzaciones
+			se aplican en las funciones individuales de cada uno como parámetros
+			por defecto.
+	
+	Returns:
+		global_prediction (:obj: `numpy.array`): arreglo con la predicción futura con
+			dimensiones (prediction_size,).
+		global_train_prediction (:obj: `numpy.array`): arreglo con la predicción histórica
+			con dimensiones (n - 5,).
 	"""
 	assert(len(data) > 5)
 	global_prediction = np.zeros((prediction_size))
@@ -53,7 +69,6 @@ def evaluate_and_predict_ep(data, prediction_size = 5,
 		global_train_prediction += train_prediction
 	
 	return global_prediction / len(experts), global_train_prediction / len(experts)
-	
 
 if __name__ == '__main__' :
 	escuela = np.array([89,127,134,152,170,172,182,192,197,210,219,222,233,226,222,205,222])

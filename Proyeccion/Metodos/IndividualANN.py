@@ -82,7 +82,28 @@ def load_data(data, window_len, shuffle = False) :
 	return tf.cast(inputs, tf.float64), tf.cast(targets, tf.float64)
 
 def train_individual_ann(data, window_len) :
-	"""
+	"""Función que entrena una nueva red neuronal dados los datos de una serie
+	de tiempo y el número de lags que se consideran predictores.
+	
+	La implementación de esta red neuronal representa una Red Neuronal Autoregresiva (NAR).
+	El cálculo de la predicción es el siguiente:
+	
+	ŷ_i = f(y_(i - 1), y_(i - 2), ... , y_(i - window_len))
+	
+	donde f es la red neuronal.
+	
+	Referencia:
+	https://en.wikipedia.org/wiki/Nonlinear_autoregressive_exogenous_model
+	
+	Args:
+		data (:obj: `numpy.array`): numpy array con los valores reales de la
+			serie de tiempo con dimensiones (n,).
+		window_len (int): número de lags que representan a los predictores de la
+			ANN.
+	
+	Returns:
+		model (:obj: `tensorflow.python.keras.engine.sequential.Sequential`):
+			modelo que contiene a la red neuronal autoregresiva entrenada.
 	"""
 	tf.random.set_seed(1)
 	
@@ -175,7 +196,25 @@ def individual_ann_predict(data, prediction_size, window_len, normalizators = []
 	return prediction
 
 def evaluate_and_predict_ann(data, prediction_size = 5, window_len = 5, normalizators = [MinMaxNormalizator]) :
-	"""
+	"""Función que devuelve la predicción de los datos históricos y los datos
+	futuros aplicando redes neuronales.
+	
+	Args:
+	    data (:obj: `numpy.array`): numpy array con los valores reales de la
+			serie de tiempo con dimensiones (n,).
+		prediction_size (int, opcional): número de años a predecir.
+		window_len (int, opcional): número de observaciones que se consideran 
+			predictores.
+		normalizators (:list: `Normalizator`, opcional): lista de objetos Normalizator. 
+			Las normalizaciones se aplican en el orden en el que se encuentran 
+			en la lista, las clases Normalizator se encuentran en el directorio 
+			Metodos/Normalizators.
+	
+	Returns:
+		prediction (:obj: `numpy.array`): arreglo con la predicción futura con
+			dimensiones (prediction_size,).
+		train_prediction (:obj: `numpy.array`): arreglo con la predicción histórica
+			con dimensiones (n - 5,).
 	"""
 	data = data.astype(np.float64)
 	

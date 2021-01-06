@@ -59,7 +59,17 @@ def fts_train(data, fuzy_sets, membership_func, order, model, partitioner) :
 	return error, model
 
 def train_hyperopt_fts(data) :
-	"""
+	"""Función que entrena un nuevo modelo de FTS dados los datos históricos
+	de una serie de tiempo. Aplica optimización de hiperparámetros utilizando
+	Grid Search.
+	
+	Args:
+	    data (:obj: `numpy.array`): Arreglo con los datos de la serie de tiempo
+	        con dimensión (n,).
+	        
+	Returns:
+		best_model (:obj: `pyFTS.models.*`): mejor modelo FTS encontrado luego
+			de aplicar Grid Search Optimization.
 	"""
 	# Hiperparámetros
 	# TODO: conforme se agreguen más datos a la base de datos el número de fuzy 
@@ -133,7 +143,23 @@ def hyperopt_fts_predict(data, prediction_size, normalizators = []) :
 	return prediction
 
 def evaluate_and_predict_fts(data, prediction_size = 5, normalizators = [MinMaxNormalizator]) :
-	"""
+	"""Función que devuelve la predicción de los datos históricos y los datos
+	futuros aplicando FTS.
+	
+	Args:
+	    data (:obj: `numpy.array`): numpy array con los valores reales de la
+			serie de tiempo con dimensiones (n,).
+		prediction_size (int, opcional): número de años a predecir.
+		normalizators (:list: `Normalizator`, opcional): lista de objetos Normalizator. 
+			Las normalizaciones se aplican en el orden en el que se encuentran 
+			en la lista, las clases Normalizator se encuentran en el directorio 
+			Metodos/Normalizators.
+	
+	Returns:
+		prediction (:obj: `numpy.array`): arreglo con la predicción futura con
+			dimensiones (prediction_size,).
+		train_prediction (:obj: `numpy.array`): arreglo con la predicción histórica
+			con dimensiones (n - 5,).
 	"""
 	assert(len(data) > 5)
 	# Aplicar las normalizaciones

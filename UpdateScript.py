@@ -8,8 +8,39 @@ import pandas as pd
 from datetime import datetime
 
 def actualizar_datos_generales(archivo_credenciales = None, direccion = None) :
+    """Función para actualizar los datos generales de las escuelas. Se conecta con
+    el servidor de base de datos para obtener los datos, se guardan en el archivo
+    DatosGenerales.json
+    
+    Los datos generales que se obtienen de una escuela son:
+    - primer año en el que aparece la escuela (int)
+    - matrícula (año con año) (list)
+    - promedio de alumnos por grupo en todos los años (float)
+    - nombre de la escuela (str)
+    - nivel de la escuela (str)
+    - latitud (float)
+    - longitud (float)
+    - municipio (str)
+    - clave de la región (str)
+    
+    Ver FuncionesOrient/DatosEscuela.js y DatosDeTodasLasEscuelas.js para conocer
+    cómo se obtienen los datos de la base de datos.
+    
+    Args:
+        archivo_credenciales (str, opcional): nombre del archivo json en el 
+            equipo en el que se encuentran las credenciales de acceso a la base 
+            de datos. Si no se proporciona entonces el programa solicitará el 
+            usuario y contraseña.
+            
+            Formato del archivo:
+            {"username":"TU_USUARIO","password":"TU_CONTRASEÑA"}
+        
+        direccion (str, opcional): dirección HTTP de la base de datos a la que se 
+            realiza la petición. Si no se proporciona se utilizará la dirección 
+            por defecto.
     """
-    """
+    
+    # Obtener credenciales
     if archivo_credenciales :
         f = open(archivo_credenciales)
         credenciales = json.loads(f.read())
@@ -20,7 +51,8 @@ def actualizar_datos_generales(archivo_credenciales = None, direccion = None) :
         print("Username: ", end = '')
         username = input()
         password = getpass.getpass()
-        
+    
+    # Editar aquí la dirección por defecto en caso de que cambie    
     direccion = direccion or 'http://e.seduzac.microbit.com:2480/function/fution1_1/DatosDeTodasLasEscuelas'
     
     try :
@@ -28,6 +60,7 @@ def actualizar_datos_generales(archivo_credenciales = None, direccion = None) :
         print(direccion)
         print("Solicitud en curso")
     
+        # Realizar solicitudd HTTP GET
         respuesta = requests.get(
             direccion,
             data={},
@@ -36,6 +69,7 @@ def actualizar_datos_generales(archivo_credenciales = None, direccion = None) :
         
         datos = json.loads(respuesta.text)
         
+        # Evaluar el estatus de la respuesta
         if 'errors' in datos :
             codigo_error = datos["errors"][0]["code"]
             
@@ -47,6 +81,7 @@ def actualizar_datos_generales(archivo_credenciales = None, direccion = None) :
                 print("Dirección inválida")
             
         else :
+            # Guardar los datos en un archivo local.
             text_file = open("DatosGenerales.json", "w")
             text_file.write(respuesta.text)
             text_file.close()
@@ -58,18 +93,31 @@ def actualizar_datos_generales(archivo_credenciales = None, direccion = None) :
         print("Porfavor revise que la dirección y las credenciales de acceso sean correctas y vuelva a intentarlo más tarde")
 
 def informacion() :
+    """Muestra la información general de este script, así como de los comandos y
+    cómo utilizarlos.
+    """
+    
     info = """
     Este script se utiliza para actualizar la información de los datos de la aplicación.
     A continuación se listan los comandos y sus parámetros:
     
     Comandos disponibles:
     
+    info:
+    
+        Muestra este mensaje de información del programa.
+        
+        Ejemplo de uso:
+        
+        $ python3.6 UpdateScript.py info
+    
     actualizar_datos_generales:
+    
         Descarga de la base de datos los datos generales de las escuelas.
         
         Parámetros disponibles:
         
-            archivo_credenciales:
+            archivo_credenciales (opcional):
                 Nombre del archivo en el equipo en el que se encuentran las credenciales
                 de acceso a la base de datos.
                 
@@ -78,31 +126,63 @@ def informacion() :
                 
                 Si no se proporciona entonces el programa solicitará el usuario y contraseña
             
-            direccion:
+            direccion (opcional):
                 Dirección HTTP de la base de datos a la que se realiza la petición.
                 
                 Si no se proporciona se utilizará la dirección por defecto.
         
         Ejemplo de uso:
         
-        $ python3.6 UpdateScript.py actualizar_datos_generales archivo_credenciales="fution_auth.json" direccion="http://e.seduzac.microbit.com:2480/function/fution1_1/DatosDeTodasLasEscuelas"
-       
-       
-    info:
-        Muestra este mensaje de información del programa.
-        
-        Ejemplo de uso:
-        
-        $ python3.6 UpdateScript.py info
-
+        $ python3.6 UpdateScript.py actualizar_datos_generales archivo_credenciales="credenciales.json" direccion="http://e.seduzac.microbit.com:2480/function/fution1_1/DatosDeTodasLasEscuelas"
 
     actualizar_proyeccion :
+        
+        Realiza la proyección de matrícula de todas las escuelas que se encuentren
+        en el archivo DatosGenerales.json. Se recomienda ejecutar este comando en
+        un equipo de alta gama, ya que se ejecutarán distintos algoritmos como
+        redes neuronales que necesitan muchos recursos para realizar los cálculos 
+        necesarios.
+        
+        Tiempo estimado para 4035 escuelas:
+        
+        +--------+---------+------------------+----------------------+-------------+
+        | Equipo | Memoria | Procesador       | Tarjeta gráfica      | Tiempo      |
+        +--------+---------+------------------+----------------------+-------------+
+        | 1      | 16 Gb   | i7 7a generación | Tarjeta de baja gama | 165 minutos |
+        +--------+---------+------------------+----------------------+-------------+
+        | 2      | 4 Gb    | AMD E1-6010      | Tarjeta de baja gama | 24 horas    |
+        +--------+---------+------------------+----------------------+-------------+
+        
+        Este comando tiene la capacidad de reanudar el trabajo en donde se quedó
+        en caso de que la ejecución haya sido interrumpida. Los datos de la 
+        proyección se guardan en el archivo .ProyeccionMatricula.csv.
+        
+        Cuando este comando comienza una nueva proyección realiza un respaldo en 
+        el directorio .respaldos_proyeccion en caso de que exista previamente un
+        archivo .ProyeccionMatricula.csv
+        
+        Parámetros disponibles:
+            
+            modo (opcional):
+                Especifica la acción a realizar por este comando. El modo por 
+                defecto es reanudar.
+                
+                reanudar: reanuda el cómputo en donde se quedó.
+                nueva_proyeccion: realiza un respaldo y comienza una nueva proyección.
+                forzar_nueva_proyeccion: realiza un respaldo y forza el comienzo 
+                    de una nueva proyección.
         
         Ejemplo de uso:
         
         $ python3.6 UpdateScript.py actualizar_proyeccion modo="nueva_proyeccion"
 
     actualizar_datos_estado :
+    
+        Genera el archivo DatosEscuelas.json el cual contiene los datos generales
+        de las escuelas junto con los datos de la proyección. Este archivo es
+        consumido por la aplicación de Dash en el directorio AppDash/.
+        
+        Sin parámetros disponibles.
         
         Ejemplo de uso:
         
@@ -112,7 +192,17 @@ def informacion() :
     print(info)
 
 def actualizar_proyeccion(modo = "reanudar") :
-    """
+    """Realiza la proyección de matrículas de todas las escuelas que se encuentren
+    en el archivo DatosGenerales.json
+    
+    Args:
+        modo (str, opcional): Especifica la acción a realizar por este comando. 
+            El modo por defecto es reanudar.
+            
+            reanudar: reanuda el cómputo en donde se quedó.
+            nueva_proyeccion: realiza un respaldo y comienza una nueva proyección.
+            forzar_nueva_proyeccion: realiza un respaldo y forza el comienzo 
+                de una nueva proyección.
     """
     
     if modo not in ["reanudar", "nueva_proyeccion", "forzar_nueva_proyeccion"] :
@@ -130,21 +220,21 @@ def actualizar_proyeccion(modo = "reanudar") :
         
     except FileNotFoundError :
         info = """
-No se encontró el archivo DatosGenerales.json, para obtenerlo ejecuta el siguiente comando:
+        No se encontró el archivo DatosGenerales.json, para obtenerlo ejecuta el siguiente comando:
 
-$ python3.6 UpdateScript.py actualizar_datos_generales
+        $ python3.6 UpdateScript.py actualizar_datos_generales
         """
         print(info)
         return
     
     if modo == "nueva_proyeccion" :
         info = """
-Antes de actualizar la proyección de matrícula se recomienda actualizar los
-datos generales con el comando:
+        Antes de actualizar la proyección de matrícula se recomienda actualizar los
+        datos generales con el comando:
 
-$ python3.6 UpdateScript.py actualizar_datos_generales
+        $ python3.6 UpdateScript.py actualizar_datos_generales
 
-¿Desea continuar? (Y/n) """
+        ¿Desea continuar? (Y/n) """
         print(info, end = '')
         
         respuesta = input().lower()
@@ -260,8 +350,12 @@ $ python3.6 UpdateScript.py actualizar_datos_generales
     print("Todas las escuelas han sido proyectadas")
     
 def actualizar_datos_estado() :
+    """Genera el archivo DatosEscuelas.json el cual contiene los datos generales
+    de las escuelas junto con los datos de la proyección. Este archivo es
+    consumido por la aplicación de Dash en el directorio AppDash/.
+    """
+    
     try :
-        #csv_proyeccion_matricula = open(".ProyeccionMatricula.csv", "w")
         csv_proyeccion_matricula = pd.read_csv(".ProyeccionMatricula.csv")
         f = open("DatosGenerales.json", "r")
         escuelas = json.load(f)['result'][0]
@@ -316,6 +410,7 @@ def comando_no_encontrado() :
     - info
     - actualizar_datos_generales
     - actualizar_proyeccion
+    - actualizar_datos_estado
 
     Uso:
 
