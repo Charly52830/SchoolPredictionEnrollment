@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 from Metodos.LinearRegression import linear_regression_predict, base_linear_regression
 from Metodos.AutoARIMA import auto_arima_predict
-from Metodos.IndividualANN import individual_ann 
+from Metodos.IndividualANN import individual_ann_predict
 from Metodos.Normalizators import MinMaxNormalizator, DummyNormalizator, DifferencingNormalizator
 
 class TestResult :
