@@ -17,7 +17,7 @@
 *	return: json (300 Kb aprox) con los registros de los grupos en cada año de cada primaria del estado.
 */
 
-var nivel_educativo = "PRIMARIA"
+var nivel_educativo = "PREESCOLAR"
 var grupos = {}
 var escuelas
 

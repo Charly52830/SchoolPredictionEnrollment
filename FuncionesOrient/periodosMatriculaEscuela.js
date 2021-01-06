@@ -12,7 +12,11 @@
 *	- Los registros de primaria del 2010 se encuentran perdidos
 *	- Los registros de secundaria del 2015 se encuentran perdidos
 *
-*	param servicio: nivel escolar del que se quiere saber los periodos
+*	(29/12/2020):
+*	- Los registros de 1996 y 1997 son inválidos para primaria y preescolar, pero
+*	  son válidos para secundaria, por lo que se comentaron sus campos.
+*
+*	param nivel: nivel escolar del que se quiere saber los periodos
 *
 *	return: arreglo con los periodos en los que la estadistica 911 cambió el formato
 *		del nivel educativo especificado. Cada periodo contiene 3 datos:
@@ -24,7 +28,7 @@
 var periodos = {
 	"PREESCOLAR" : [
 		[1990, 1995, "No hay diccionario"],
-		[1996, 1997, "TOT30"],
+		//[1996, 1997, "TOT30"],
 		[1998, 2016, "V63"],
 		[2017, 2017, "V177"],
 		[2018, 2018, "v177"],
@@ -32,7 +36,7 @@ var periodos = {
 	],
 	"PRIMARIA" : [
 		[1990, 1995, "No hay diccionario"],
-		[1996, 1997, "TOT158"],
+		//[1996, 1997, "TOT158"],
 		[1998, 2016, "V347"],
 		[2017, 2017, "V608"],
 		[2018, 2018, "v608"],
@@ -64,4 +68,4 @@ var periodos = {
 	]
 }
 
-return periodos[servicio]
+return periodos[nivel]
