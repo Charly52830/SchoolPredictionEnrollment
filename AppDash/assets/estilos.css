@@ -1,0 +1,49 @@
+body {
+	background-color : #E6E6E6;
+}
+
+/* Referencia tooltip:
+https://www.w3schools.com/css/css_tooltip.asp
+*/
+
+.mi-tooltip {
+  position: relative;
+  display: inline-block;
+  border-bottom: 1px dotted black;
+}
+
+.mi-tooltip .contenido-tooltip {
+  visibility: hidden;
+  width: 20rem;
+  margin-left: -10rem;
+  bottom: 100%;
+  left: 50%;
+  background-color: white;
+  border: solid;
+  border-width: thin;
+  text-align: center;
+  padding: 5px 0;
+  border-radius: 6px;
+  padding-bottom : 0px;
+ 
+	/* Posición del tooltip */
+  position: absolute;
+  z-index: 1;
+}
+
+.texto-tooltip {
+  font-size : small;
+  background-color : #E6E6E6;
+  margin : 1px;
+  padding: 1px;
+}
+
+/* Mostrar el tooltip cuando el mouse se encuentre sobre el contenedor del tooltip */
+.mi-tooltip:hover .contenido-tooltip {
+  visibility: visible;
+}
+
+.tabla-metricas td, th {
+	padding-left: 0;
+	padding-right: 0;
+}

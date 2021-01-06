@@ -2,12 +2,6 @@
 *	Función que devuelve la cantidad de alumnos de cada escuela primaria del estado que pertenecen
 *	a un sostenimiento específico.
 *
-*	Notas importantes 
-*	(08/05/20) :
-*	- La consulta realiza una primer limpieza de los datos. Solo devuelve el registro de las
-*	  primarias que tienen más de 18 años registradas excluyendo el año 2010.
-*	- Por seguridad, la función no debe de permanecer como idempotente.
-*
 *	param sostenimiento: sostenimiento de las escuelas.
 *		Tiene que ser alguno de los siguientes campos (EN MAYÚSCULA):
 *		PRIVADO, PÚBLICO
@@ -17,7 +11,7 @@
 *	return: json (300 Kb aprox) con los registros de los alumnos en cada año de cada primaria del estado.
 */
 
-var nivel_educativo = "PRIMARIA"
+var nivel_educativo = "PREESCOLAR"
 var matricula = {}
 var escuelas
 

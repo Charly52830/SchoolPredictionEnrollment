@@ -1,6 +1,6 @@
 # SchoolPredictionEnrollment
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/Charly52830/SchoolPredictionEnrollment/master?filepath=JupyterNotebooks/)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/Charly52830/SchoolPredictionEnrollment/master?filepath=Proyeccion/JupyterNotebooks/)
 
 Repository for the thesis project: Techniques for forecasting multiple time series: an application of computer intelligence techniques for school enrollment projections.
 
