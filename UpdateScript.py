@@ -398,9 +398,9 @@ def actualizar_datos_estado() :
         }
         datos_completos_escuelas[cct] = escuela
     
-    with open("DatosEscuelas.json", "w+") as outfile:  
+    with open("AppDash/DatosEscuelas.json", "w+") as outfile:  
         json.dump(datos_completos_escuelas, outfile, separators=(',', ':')) 
-    print("Datos guardados en el archivo DatosEscuelas.json")
+    print("Datos guardados en el archivo AppDash/DatosEscuelas.json")
 
 def comando_no_encontrado() :
     info = """
