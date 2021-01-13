@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State, MATCH
@@ -92,6 +93,8 @@ def cargar_plantilla_formulario(ccts = [], mensaje_error = '') :
         input_ccts = [generar_input_cct(1)]
     
     form = html.Form(
+        # Tipo de reporte
+        [dcc.Input(name = "tipo_reporte", value = "reporte_escuelas", type = "hidden")] + 
         input_ccts +
         # Renglón para el botón para agregar una nueva cct
         [dbc.Row([
@@ -199,7 +202,7 @@ def agregar_nueva_escuela(click, formulario) :
 @app.callback(
     [Output({'type' : 'input-cct', 'index' : MATCH}, 'invalid'),
      Output({'type' : 'input-cct', 'index' : MATCH}, 'valid')],
-    Input({'type' : 'input-cct', 'index' : MATCH}, 'n_blur'),
+    Input({'type' : 'input-cct', 'index' : MATCH}, 'value'),
     State({'type' : 'input-cct', 'index' : MATCH}, 'value')
 )
 def validar_cct(blur, cct) : 

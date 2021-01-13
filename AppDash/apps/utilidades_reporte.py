@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 from datetime import date
 import numpy as np
+import pandas as pd
 
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
 import plotly.graph_objs as go
+import plotly.express as px
 from collections import OrderedDict
 from statsmodels.tsa.stattools import acf, pacf
 
@@ -44,7 +46,7 @@ def ordenar_escuelas(escuelas) :
     return escuelas_ordenadas
 
 class GeneradorDeGraficas :
-    
+
     def generar_scatterplot(escuelas, show_legend = True, title = u"Proyección de matrícula") :
         """
         Función para generar una gráfica que contiene los Scatterplot de las 
@@ -60,119 +62,67 @@ class GeneradorDeGraficas :
             scatterplot (:obj: `plotly.graph_objs.Figure`): figura con los Scatterplot
                 lista para ser utilizada por un objeto dcc.Graph.
         """
-        def add_trace(fig, cct, data, seed_year = 1998) :
-            """
-            Agrega un nuevo scatterplot a la gráfica.
-            
-            Args:
-                fig (:obj: `plotly.graph_objs.Figure`): figura a la cual agregar
-                    el nuevo scatterplot.
-                cct (str): cct de la escuela a agregar.
-                data (list): datos de la escuela a agregar.
-                seed_year (int, opcional): primer año en el que se tiene registro de los
-                    datos de la escuela.
-            """
-            scatter = go.Scatter(
-                x = ["%d-08-01" % (seed_year + i) for i in range(len(data))],
-                y = [str(i) for i in data],
-                name = cct,
-                text = [str(i) for i in data],
-                yaxis="y",
-                mode = 'lines+markers',
-            )
-            fig.add_trace(scatter)
-
-        # Create figure
-        scatterplot = go.Figure()
-
-        # Add traces
+        # Obtener primer año que aparece
+        primer_anio = min([escuelas[cct]['primer_anio'] for cct in escuelas])
+        ultimo_anio = max([escuelas[cct]['primer_anio'] + 5 + len(escuelas[cct]['matricula']) for cct in escuelas])
+        fechas = ["%d-08-01" % (i) for i in range(primer_anio, ultimo_anio)]
+        
+        data = {'fechas' : fechas}
         for cct in escuelas :
-            matricula = escuelas[cct]['matricula'] + escuelas[cct]['pred']
+            primer_anio_escuela = escuelas[cct]['primer_anio']
+            matricula = list(map(str, escuelas[cct]['matricula']))
+            prediccion = list(map(str, escuelas[cct]['pred']))
             
-            # Agregar matricula
-            add_trace(
-                fig = scatterplot,
-                cct = cct,
-                data = matricula,
-                seed_year = escuelas[cct]['primer_anio']
-            )
-
-        # Add shapes
-        scatterplot.update_layout(
-            shapes = [
-                dict(
-                    fillcolor="rgba(77, 213, 0, 0.2)",
-                    line={"width": 0},
-                    type="rect",
-                    x0="2020-01-01",
-                    x1="2021-01-01",
-                    xref="x",
-                    y0=0,
-                    y1=1.0,
-                    yref="paper"
-                ),
-                dict(
-                    fillcolor="rgba(144, 217, 0, 0.3)",
-                    line={"width": 0},
-                    type="rect",
-                    x0="2021-01-01",
-                    x1="2022-01-01",
-                    xref="x",
-                    y0=0,
-                    y1=1.0,
-                    yref="paper"
-                ),
-                dict(
-                    fillcolor="rgba(213, 221, 0, 0.3)",
-                    line={"width": 0},
-                    type="rect",
-                    x0="2022-01-01",
-                    x1="2023-01-01",
-                    xref="x",
-                    y0=0,
-                    y1=1.0,
-                    yref="paper"
-                ),
-                dict(
-                    fillcolor="rgba(225, 165, 0, 0.3)",
-                    line={"width": 0},
-                    type="rect",
-                    x0="2023-01-01",
-                    x1="2024-01-01",
-                    xref="x",
-                    y0=0,
-                    y1=1.0,
-                    yref="paper"
-                ),
-                dict(
-                    fillcolor="rgba(229, 99, 0, 0.3)",
-                    line={"width": 0},
-                    type="rect",
-                    x0="2024-01-01",
-                    x1="2025-01-01",
-                    xref="x",
-                    y0=0,
-                    y1=1.0,
-                    yref="paper"
-                ),
-            ]
+            data[cct] = ([''] * (primer_anio_escuela - primer_anio)) + matricula + prediccion
+        
+        df = pd.DataFrame(data)
+        
+        # Create figure
+        scatterplot = px.line(
+            df, 
+            x = "fechas", 
+            y = df.columns,
+            title = title,
         )
-
+        
+        # Add shapes
+        colores_figuras = [
+            "rgba(77, 213, 0, 0.3)",
+            "rgba(144, 217, 0, 0.3)",
+            "rgba(213, 221, 0, 0.3)",
+            "rgba(225, 165, 0, 0.3)",
+            "rgba(229, 99, 0, 0.3)",
+        ]
+        
+        figuras = [
+            dict(
+                fillcolor = colores_figuras[i],
+                line = {"width" : 0},
+                type = "rect",
+                x0 = "%d-01-01" % (ultimo_anio - 5 + i),
+                x1 = "%d-01-01" % (ultimo_anio - 4 + i),
+                xref = "x",
+                y0 = 0,
+                y1 = 1.0,
+                yref = "paper"
+            ) for i in range(5)]
+        
+        scatterplot.update_layout(shapes = figuras)
+        
         # Style all the traces
         scatterplot.update_traces(
-            hoverinfo = "name+x+text",
             showlegend = show_legend
         )
-
+        
         # Update axes
         scatterplot.update_layout(
             xaxis = dict(
 	            autorange = True,
-	            range = ["1998-08-01", "2025-08-01"],
-	            rangeslider = dict(
-		            autorange = True,
-		            range = ["1998-08-01", "2025-08-01"]
-	            ),
+	            range = ["%d-08-01" % (primer_anio), "%d-08-01" % (ultimo_anio)],
+	            #rangeslider = dict(
+		        #    autorange = True,
+		        #    range = ["%d-08-01" % (primer_anio), "%d-08-01" % (ultimo_anio)]
+	            #),
 	            type = "date",
             ),
             title = title,
@@ -189,15 +139,21 @@ class GeneradorDeGraficas :
             title_text = u"Alumnos",
             title_font = {"size": 20}
         )
-
+        
         # Update layout
         scatterplot.update_layout(
             dragmode="zoom",
-            hovermode="x",
             template="plotly_white",
-            margin=dict(b = 50),
+            margin=dict(b = 50, r = 15),
+            legend_title = "Escuelas"
         )
-
+        
+        scatterplot.update_traces(
+            mode = "markers+lines",
+            # Mostrar el número de alumnos al hacer hover sobre un punto
+            hovertemplate = '%{y:d}',
+        )
+        
         return scatterplot
 
     def generar_boxplot(escuelas, show_legend = True, title = u'Box plot de la matrícula escolar') :
@@ -645,7 +601,7 @@ class GeneradorDeGraficas :
             title = titulo,
 	        title_font = dict(size = 20),	# Tamaño del titulo
 	        title_x = 0.5,	# Centrar el titulo,
-	        margin=dict(b = 15),
+	        margin=dict(b = 15, l = 20, r = 30),
         )
         
         return mapa

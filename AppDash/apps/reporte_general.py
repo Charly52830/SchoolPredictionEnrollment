@@ -21,7 +21,6 @@ def cargar_contenido_reporte_general(escuelas) :
     Args:
         escuelas (:obj: `OrderedDict`): diccionario ordenado con los datos de las
             escuelas del reporte.
-
     Returns:
         Layout del reporte general para mostrarlo en la plantilla del reporte.
     """

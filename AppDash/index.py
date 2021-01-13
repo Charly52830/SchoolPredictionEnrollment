@@ -9,10 +9,11 @@ import dash_bootstrap_components as dbc
 
 from dash.dependencies import Input, Output, State
 
-from app import app, cache
+from app import app, server, cache
 from apps import escuelas, regiones, estado, plantilla_reporte, reporte_individual, reporte_general
 from apps.utilidades_reporte import ordenar_escuelas
 
+app.title = 'Matrícula SEDUZAC'
 app.layout = html.Div([
     dcc.Location(id = 'url', refresh = False),
     html.Div(id = 'page-content'),
@@ -21,9 +22,22 @@ app.layout = html.Div([
 
 MENSAJES_ERROR = {
     "ccts_invalidos" : u"Algunas de las CCT que se ingresaron no son válidas, porfavor, escriba adecuadamente las CCT e inténtelo de nuevo",
-    "ccts_vacios" : u"Porfavor, ingresa al menos una CCT para generar un reporte"
+    "ccts_vacios" : u"Porfavor, ingresa al menos una CCT para generar un reporte",
+    "region_invalida" : u"La región que seleccionaste no es válida, porfavor, selecciona una región disponible."
 }
 
+REGIONES = cache['regiones']
+
+def cargar_parametros(parametros) :
+    GET = dict()
+    
+    llave_y_valor = parametros[1:].split('&')
+    for item in llave_y_valor :
+        llave, valor = item.split('=')
+        GET[llave] = valor
+    
+    return GET
+    
 # Layout de la página principal
 layout = dbc.Container([
     # Texto de encabezado
@@ -80,10 +94,9 @@ layout = dbc.Container([
                                 style = {"font-size" : "7rem", "margin" : "1.5rem", "color" : "black"}
                             ),
                             type = "button",
-                            style = {"background" : "#1199EE", "border-color" : "#1199EE"},
-                            disabled = True
+                            style = {"background" : "#1199EE", "border-color" : "#1199EE"}
                         ),
-                        href = "#"
+                        href = "/apps/regiones"
                     ),
                     justify="center"
                 ),
@@ -155,7 +168,6 @@ def display_page(pathname, parametros, data):
             sesión.
         parametros (str): parametros o 'query string' del URL en caso de que se
             realice una consulta.
-
     Returns :
         pagina : componente de dash core, dash bootstrap o dash html con el layout
             de la página solicitada en caso de que se encuentre alguna, si no,
@@ -171,52 +183,104 @@ def display_page(pathname, parametros, data):
     if pathname == '/apps/escuelas' :
         pagina = escuelas.cargar_plantilla_formulario()
     elif pathname == '/apps/regiones' :
-        pagina = regiones.layout
+        pagina = regiones.cargar_plantilla_formulario()
     elif pathname == '/apps/estado' :
         pagina = estado.layout
     # Reporte general
     elif pathname == '/apps/reporte' :
         # Solicitud de nuevo reporte
         if parametros :
-            # Separar parámetros y obtener su valor
-            llave_y_valor = parametros[1:].split('&')
-            ccts = []
-            for item in llave_y_valor :
-                llave, valor = item.split('=')
-                if valor :
-                    ccts.append(valor)
+            GET = cargar_parametros(parametros)
             
-            ccts_invalidos = False
-            for cct in ccts :
-                ccts_invalidos |= cct not in cache['escuelas']
-            
-            # Si los ccts no son válidos volver al formulario
-            if ccts_invalidos :
-                pagina = escuelas.cargar_plantilla_formulario(
-                    ccts = ccts, 
-                    mensaje_error = MENSAJES_ERROR['ccts_invalidos']
-                )
-            # Si no se proporcionó ningún cct volver al formulario
-            elif not ccts :
-                pagina = escuelas.cargar_plantilla_formulario(
-                    ccts = ccts, 
-                    mensaje_error = MENSAJES_ERROR['ccts_vacios']
-                )
-            # Si los ccts son válidos generar un reporte
-            else :
-                # Activar la sesión
-                data['session_active'] = True
+            # Reporte de una región
+            if GET['tipo_reporte'] == 'reporte_region' :
+                # Validar parámetros
+                parametros_validos = 'region' in GET
                 
-                __escuelas = dict()
-                for cct in ccts :
-                    __escuelas[cct] = cache['escuelas'][cct]
-                data['escuelas'] = ordenar_escuelas(__escuelas)
-                
-                pagina = plantilla_reporte.cargar_plantilla_reporte(
-                    contenido = reporte_general.cargar_contenido_reporte_general(
-                        escuelas = ordenar_escuelas(data['escuelas'])
+                # Si la estructura de los parámetros no es válida regresar 404
+                if not parametros_validos :
+                    pagina = '404'
+                # Si la región es inválida volver al formulario
+                elif GET['region'] not in REGIONES :
+                    pagina = regiones.cargar_plantilla_formulario(
+                        mensaje_error = MENSAJES_ERROR['region_invalida']
                     )
-                )
+                # Si la región existe generar un reporte
+                else :
+                    # Activar la sesión
+                    data['session_active'] = True
+                    
+                    # Obtener las escuelas de la región
+                    region = GET['region']
+                    __escuelas = dict()
+                    for cct in cache['escuelas'] :
+                        if cache['escuelas'][cct]['region'] == region :
+                            __escuelas[cct] = cache['escuelas'][cct]
+                    
+                    # Ordenar las escuelas
+                    data['escuelas'] = ordenar_escuelas(__escuelas)
+                    
+                    pagina = plantilla_reporte.cargar_plantilla_reporte(
+                        contenido = reporte_general.cargar_contenido_reporte_general(
+                            escuelas = ordenar_escuelas(data['escuelas'])
+                        )
+                    )
+                
+            # Reporte de escuelas
+            elif GET['tipo_reporte'] == 'reporte_escuelas' :
+                GET.pop('tipo_reporte')
+                # Validar parámetros
+                parametros_validos = True
+                # Validar ccts
+                ccts_invalidos = False
+                
+                ccts = []
+                for llave in GET :
+                    # Validar que tenga el formato de un cct seguido de un número
+                    parametros_validos &= re.search("^cct\d+", llave) is not None
+                    
+                    if parametros_validos :
+                        ccts.append(GET[llave])
+                    else :
+                        break
+                    
+                    # Validar si el cct existe
+                    ccts_invalidos |= GET[llave] not in cache['escuelas']
+                
+                # Si la estructura de los parámetros no es válida regresar 404
+                if not parametros_validos :
+                    pagina = '404'
+                # Si los ccts no son válidos volver al formulario
+                elif ccts_invalidos :
+                    pagina = escuelas.cargar_plantilla_formulario(
+                        ccts = ccts, 
+                        mensaje_error = MENSAJES_ERROR['ccts_invalidos']
+                    )
+                # Si no se proporcionó ningún cct volver al formulario
+                elif not ccts :
+                    pagina = escuelas.cargar_plantilla_formulario(
+                        ccts = ccts, 
+                        mensaje_error = MENSAJES_ERROR['ccts_vacios']
+                    )
+                 # Si los ccts son válidos generar un reporte
+                else :
+                    # Activar la sesión
+                    data['session_active'] = True
+                    
+                    # Obtener la información de las escuelas
+                    __escuelas = dict()
+                    for cct in ccts :
+                        __escuelas[cct] = cache['escuelas'][cct]
+                    
+                    # Ordenar las escuelas
+                    data['escuelas'] = ordenar_escuelas(__escuelas)
+                    
+                    pagina = plantilla_reporte.cargar_plantilla_reporte(
+                        contenido = reporte_general.cargar_contenido_reporte_general(
+                            escuelas = ordenar_escuelas(data['escuelas'])
+                        )
+                    )
+                
         # Solicitud de volver a la página del reporte
         elif data['session_active'] :
             pagina = plantilla_reporte.cargar_plantilla_reporte(
