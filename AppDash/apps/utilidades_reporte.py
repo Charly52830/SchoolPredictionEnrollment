@@ -13,7 +13,7 @@ from statsmodels.tsa.stattools import acf, pacf
 
 from app import app
 
-MAPBOX_TOKEN = open(".mapbox_token").read()
+MAPBOX_TOKEN = "pk.eyJ1IjoiY2hhcmx5NTI4MzAiLCJhIjoiY2tqaXNxZW85NHlmMzJzbnBzYTA0bGw0MyJ9.rMIKmtHurvNjC_-OwV_j6Q"
 
 TEXTO_TOOLTIP = {
     "PAG" : u"Promedio del número de alumnos por grupo que la escuela ha tenido en todos los años",
