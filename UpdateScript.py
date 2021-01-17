@@ -348,7 +348,7 @@ def actualizar_proyeccion(modo = "reanudar") :
 
     csv_proyeccion_matricula.close()
     print("Todas las escuelas han sido proyectadas")
-    
+
 def actualizar_datos_estado() :
     """Genera el archivo DatosEscuelas.json el cual contiene los datos generales
     de las escuelas junto con los datos de la proyección. Este archivo es
@@ -374,6 +374,7 @@ def actualizar_datos_estado() :
         print("$ python3.6 UpdateScript.py actualizar_datos_generales")
         print("$ python3.6 UpdateScript.py actualizar_proyeccion")
 
+	# Datos de las escuelas
     datos_completos_escuelas = dict()
     for i in range(csv_proyeccion_matricula.shape[0]) :
         row = np.array(csv_proyeccion_matricula.loc[i])
@@ -381,7 +382,7 @@ def actualizar_datos_estado() :
         
         escuela = {
             "primer_anio" : int(escuelas[cct]["primer_anio"]),
-            "matricula" : escuelas[cct]["matricula"],
+            "matricula" : list(map(int, escuelas[cct]["matricula"])),
             "pred" : list(map(int, row[1:6])),
             "mae" : row[6],
             "rmse" : row[7],
@@ -398,8 +399,139 @@ def actualizar_datos_estado() :
         }
         datos_completos_escuelas[cct] = escuela
     
+    # Datos de las regiones
+    regiones = {
+		"32ADG0012M" : {"nombre" : "Fresnillo Estatal"},
+		"32ADG0025Q" : {"nombre" : "Fresnillo Federal"},
+		"32ADG0013L" : {"nombre" : "Jalpa Estatal"},
+		"32ADG0003E" : {"nombre" : "Jalpa Federal"},
+		"32ADG0014K" : {"nombre" : "Tlaltenango Estatal"},
+		"32ADG0004D" : {"nombre" : "Tlaltenango Federal"},
+		"32ADG0015J" : {"nombre" : "Río Grande Estatal"},
+		"32ADG0005C" : {"nombre" : "Río Grande Federal"},
+		"32ADG0016I" : {"nombre" : "Concepción del Oro Estatal"},
+		"32ADG0006B" : {"nombre" : "Concepción del Oro Federal"},
+		"32ADG0017H" : {"nombre" : "Pinos Estatal"},
+		"32ADG0007A" : {"nombre" : "Pinos Federal"},
+		"32ADG0018G" : {"nombre" : "Jerez Estatal"},
+		"32ADG0008Z" : {"nombre" : "Jerez Federal"},
+		#"32ADG0127N" : {"nombre" : "Loreto Estatal"},
+		"32FSR0001J" : {"nombre" : "Loreto Estatal"},
+		"32ADG0009Z" : {"nombre" : "Loreto Federal"},
+		"32ADG0021U" : {"nombre" : "Guadalupe Estatal"},
+		"32ADG0019F" : {"nombre" : "Guadalupe Federal"},
+		"32ADG0022T" : {"nombre" : "Sombrerete Estatal"},
+		"32ADG0020V" : {"nombre" : "Sombrerete Federal"},
+		"32ADG0011N" : {"nombre" : "Zacatecas Estatal"},
+		"32ADG0010O" : {"nombre" : "Zacatecas Federal"},
+		"32ADG0023S" : {"nombre" : "Nochistlán Federal"},
+		"32ADG0026P" : {"nombre" : "Valparaíso Federal"}
+	}
+    
+    # Datos de los municipios
+    municipios = dict()
+    
+    # Datos del estado
+    estado = dict()
+    
+    def acumular_escuelas(conjunto, llave, omitir_llaves_perdidas = True) :
+        """
+        """
+        
+        def merge(matricula_1, matricula_2) :
+            """
+            """
+            
+            matricula_acumulada = [0] * max(len(matricula_1), len(matricula_2))
+            
+            i = len(matricula_1) - 1
+            j = len(matricula_2) - 1
+            k = len(matricula_acumulada) - 1
+            
+            while i >= 0 or j >= 0 :
+                if i >= 0 :
+                    matricula_acumulada[k] += matricula_1[i]
+                    i -= 1
+                if j >= 0:
+                    matricula_acumulada[k] += matricula_2[j]
+                    j -= 1
+                k -= 1
+            
+            return list(map(int, matricula_acumulada))
+        
+        for cct in datos_completos_escuelas :
+            if llave is None :
+                elemento = 'Zacatecas'
+            else :
+                elemento = datos_completos_escuelas[cct][llave]
+                
+            primer_anio_escuela = datos_completos_escuelas[cct]['primer_anio']
+            matricula_escuela = datos_completos_escuelas[cct]['matricula']
+            prediccion_escuela = datos_completos_escuelas[cct]['pred']
+            
+            # La región o el municipio de la escuela no se encuentra en el conjunto
+            if not elemento in conjunto :
+                print('No se encontró la llave %s en el conjunto' % (elemento))
+                if omitir_llaves_perdidas :
+                    print("Omitiendo elemento")
+                    continue
+                else :
+                    print("Agregando nuevo elemento al conjunto")
+                    conjunto[elemento] = {'nombre' : elemento}
+            # No se han agregado datos de matrícula a la región o el municipio
+            if not 'matricula' in conjunto[elemento] :
+                conjunto[elemento]['matricula'] = matricula_escuela
+                conjunto[elemento]['primer_anio'] = primer_anio_escuela
+                conjunto[elemento]['pred'] = prediccion_escuela
+            # Ya se agregó al menos una escuela a la región
+            else :
+                matricula_elemento = conjunto[elemento]['matricula']
+                primer_anio_elemento = conjunto[elemento]['primer_anio']
+                prediccion_elemento = conjunto[elemento]['pred']
+                
+                assert(primer_anio_escuela + len(matricula_escuela) == primer_anio_elemento + len(matricula_elemento))
+                conjunto[elemento]['matricula'] = merge(matricula_elemento, matricula_escuela)
+                conjunto[elemento]['primer_anio'] = min(primer_anio_escuela, primer_anio_elemento)
+                conjunto[elemento]['pred'] = list(map(int, list(np.array(prediccion_escuela) + np.array(prediccion_elemento))))
+        
+        # Eliminar los 2 primeros años si la matrícula comienza en 1996
+        for elemento in conjunto :
+            matricula = conjunto[elemento]['matricula']
+            primer_anio = conjunto[elemento]['primer_anio']
+            
+            if primer_anio == 1996 :
+                conjunto[elemento]['matricula'] = matricula[2:]
+                conjunto[elemento]['primer_anio'] = 1998
+        
+        return conjunto
+        
+    regiones = acumular_escuelas(
+        conjunto = regiones, 
+        llave = 'region', 
+        omitir_llaves_perdidas = True
+    )
+    
+    municipios = acumular_escuelas(
+        conjunto = municipios, 
+        llave = 'mun', 
+        omitir_llaves_perdidas = False
+    )
+    
+    estado = acumular_escuelas(
+        conjunto = estado, 
+        llave = None, 
+        omitir_llaves_perdidas = False
+    )
+    
+    DatosEscuelas = {
+        'escuelas' : datos_completos_escuelas,
+        'regiones' : regiones,
+        'municipios': municipios,
+        'estado': estado['Zacatecas']
+    }
+    
     with open("AppDash/DatosEscuelas.json", "w+") as outfile:  
-        json.dump(datos_completos_escuelas, outfile, separators=(',', ':')) 
+        json.dump(DatosEscuelas, outfile, separators=(',', ':')) 
     print("Datos guardados en el archivo AppDash/DatosEscuelas.json")
 
 def comando_no_encontrado() :
@@ -448,6 +580,7 @@ def cargar_comando() :
 if __name__ == "__main__" :    
     comando = cargar_comando()
     parametros = cargar_parametros()
+    
     try :
         if comando == comando_no_encontrado :
             comando()

@@ -123,10 +123,9 @@ layout = dbc.Container([
                                 style = {"font-size" : "7rem", "margin" : "1.5rem 2rem 1.5rem 2rem", "color" : "black"}
                             ),
                             type = "button",
-                            style = {"background" : "#1199EE", "border-color" : "#1199EE"},
-                            disabled = True
+                            style = {"background" : "#1199EE", "border-color" : "#1199EE"}
                         ),
-                        href = "#"
+                        href = "apps/estado"
                     ),
                     justify="center"
                 ),
@@ -269,6 +268,7 @@ def display_page(pathname, parametros, data):
                     
                     # Obtener la información de las escuelas
                     __escuelas = dict()
+                    
                     for cct in ccts :
                         __escuelas[cct] = cache['escuelas'][cct]
                     
