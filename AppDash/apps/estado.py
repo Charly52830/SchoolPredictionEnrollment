@@ -10,34 +10,7 @@ from dash_extensions import Download
 
 from app import app, cache
 from apps.utilidades_reporte import GeneradorDeGraficas
-from apps.FabricasNodos import Nodo, ElementosLayoutPrincipal, FabricaNodosRegion, FabricaNodosMunicipio
-
-municipios_de_regiones = {
-    "32ADG0011N" : ['Calera', 'Morelos', 'Pánuco', 'Vetagrande', 'Villa de cos', 'Zacatecas'],
-    "32ADG0012M" : ['Cañitas de Felipe Pescador', 'Fresnillo', 'General Enrique Estrada', 'Valparaíso'],
-    "32ADG0013L" : ['Apozol', 'Huanusco', 'Jalpa', 'Juchipila', 'Mezquital del oro', 'Moyahua de Estrada', 'Tabasco'],
-    "32ADG0014K" : ['Atolinga', 'Benito Juárez', 'Momax', 'Santa María de la paz', 'Tepechitlán', 'Teúl de González Ortega', 'Tlaltenango de Sánchez Román', 'Trinidad García de la Cadena'],
-    "32ADG0015J" : ['General Francisco r Murguía', 'Juan Aldama', 'Miguel Auza', 'Río Grande'],
-    "32ADG0016I" : ['Concepción del oro', 'El Salvador', 'Mazapil', 'Melchor Ocampo'],
-    "32ADG0017H" : ['Pinos', 'Villa Hidalgo'],
-    "32ADG0018G" : ['El Plateado de Joaquín Amaro', 'Jerez', 'Monte Escobedo', 'Susticacán', 'Tepetongo', 'Villanueva'],
-    "32FSR0001J" : ['Loreto', 'Noria de Ángeles', 'Villa García', 'Villa González Ortega'],
-    "32ADG0021U" : ['Cuauhtémoc', 'Genaro Codina', 'General Pánfilo Natera', 'Guadalupe', 'Luis Moya', 'Ojocaliente', 'Trancoso'],
-    "32ADG0022T" : ['Chalchihuites', 'Jiménez del Teul', 'Sain Alto', 'Sombrerete'],
-    "32ADG0010O" : ['Calera', 'General Enrique Estrada', 'Morelos', 'Pánuco', 'Villa de cos', 'Zacatecas'],
-    "32ADG0025Q" : ['Cañitas de Felipe Pescador', 'Fresnillo'],
-    "32ADG0003E" : ['Apozol', 'Huanusco', 'Jalpa', 'Juchipila', 'Mezquital del oro', 'Moyahua de Estrada', 'Tabasco'],
-    "32ADG0004D" : ['Atolinga', 'Benito Juárez', 'Momax', 'Santa María de la paz', 'Tepechitlán', 'Teúl de González Ortega', 'Tlaltenango de Sánchez Román', 'Trinidad García de la Cadena'],
-    "32ADG0005C" : ['General Francisco r Murguía', 'Juan Aldama', 'Miguel Auza', 'Río Grande'],
-    "32ADG0006B" : ['Concepción del oro', 'El Salvador', 'Mazapil', 'Melchor Ocampo'],
-    "32ADG0007A" : ['Pinos', 'Villa Hidalgo'],
-    "32ADG0008Z" : ['El Plateado de Joaquín Amaro', 'Jerez', 'Monte Escobedo', 'Susticacán', 'Tepetongo', 'Villanueva'],
-    "32ADG0009Z" : ['Loreto', 'Noria de Ángeles', 'Villa García', 'Villa González Ortega'],
-    "32ADG0019F" : ['Cuauhtémoc', 'Genaro Codina', 'General Pánfilo Natera', 'Guadalupe', 'Luis Moya', 'Ojocaliente', 'Trancoso', 'Vetagrande'],
-    "32ADG0020V" : ['Chalchihuites', 'Jiménez del Teul', 'Sain Alto', 'Sombrerete'],
-    "32ADG0023S" : ['Apulco', 'Nochistlán de Mejía'],
-    "32ADG0026P" : ['Valparaíso']
-}
+from apps.FabricasNodos import *
 
 layout = html.Div([
     dcc.Store(id = 'local-data', storage_type = 'local'),
@@ -127,20 +100,27 @@ def cargar_plantilla_principal(nodo, hijo = None) :
                 value = hijo,
                 style = {"margin" : "0 0.2rem 0.2rem 0.2rem"},
             ),
-            dbc.Button([
-                u"Descargar csv ",
-                html.I(className="far fa-arrow-alt-circle-down")],
-                color = "info",
-                style = {
-                    "padding" : "0.2rem", 
-                    "margin" : "0.2rem 0.2rem 0.2rem 0.2rem", 
-                    "background" : "#1199EE"
-                },
-                id = "boton-generar-csv-individual"
-            ),
-            Download(id = "generar-csv-individual"),
-            layout_nodo.boton_regresar,
-            layout_nodo.boton_avanzar]
+            html.Form([
+                # Tipo de reporte
+                dcc.Input(name = "tipo_reporte", value = "reporte_municipio", type = "hidden"),
+                dcc.Input(name = "id_municipio", id = 'input-municipio', type = "hidden"),
+                dbc.Button([
+                    u"Descargar csv ",
+                    html.I(className="far fa-arrow-alt-circle-down")],
+                    color = "info",
+                    style = {
+                        "padding" : "0.2rem", 
+                        "margin" : "0.2rem 0.2rem 0.2rem 0.2rem", 
+                        "background" : "#1199EE"
+                    },
+                    id = "boton-generar-csv-individual",
+                    type = "button"
+                ),
+                Download(id = "generar-csv-individual"),
+                layout_nodo.boton_regresar,
+                layout_nodo.boton_avanzar],
+                action = "/apps/reporte"
+            )]
         ),
         style = {"margin": "0 1rem 1rem 1rem"}
     )
@@ -391,7 +371,8 @@ def controlar_contenido_principal(click_regresar, click_avanzar, data, data_hijo
 @app.callback(
     [Output('contenido-individual', 'children'),
      Output("loading-output-1", "children"),
-     Output('nombre-hijo', 'data')],
+     Output('nombre-hijo', 'data'),
+     Output('input-municipio', 'value')],
     Input('num-hijo', 'value'),
     State('local-data', 'data')
 )
@@ -407,4 +388,13 @@ def controlar_contenido_individual(nombre_hijo, data) :
     nodo = nodo.hijos[nombre_hijo]
     escuelas = obtener_escuelas(nodo.id)
     
-    return cargar_plantilla_secundaria(nodo.serie_individual, obtener_escuelas(nodo.id)), None, {'nombre-hijo': nombre_hijo}
+    input_municipio = ''
+    if nombre_hijo in cache['municipios'] :
+        input_municipio = list(cache['municipios'].keys()).index(nombre_hijo)
+    
+    return (
+        cargar_plantilla_secundaria(nodo.serie_individual, obtener_escuelas(nodo.id)), 
+        None, 
+        {'nombre-hijo': nombre_hijo}, 
+        input_municipio
+    )

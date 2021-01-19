@@ -14,6 +14,8 @@ from dash.exceptions import PreventUpdate
 from app import app
 from apps.utilidades_reporte import GeneradorDeGraficas
 
+ESCUELAS_POR_PAGINA = 20
+
 def cargar_contenido_reporte_general(escuelas) :
     """
     Carga el layout del reporte general dados los datos de las escuelas.
@@ -24,11 +26,41 @@ def cargar_contenido_reporte_general(escuelas) :
     Returns:
         Layout del reporte general para mostrarlo en la plantilla del reporte.
     """
-    scatterplot = GeneradorDeGraficas.generar_scatterplot(escuelas)
-    boxplot = GeneradorDeGraficas.generar_boxplot(escuelas)
-    tabla_metricas = GeneradorDeGraficas.generar_tabla_metricas(escuelas)
-    tabla_matricula = GeneradorDeGraficas.generar_tabla_matricula(escuelas)
+    
     mapa = GeneradorDeGraficas.generar_mapa(escuelas)
+    
+    contador_escuelas = {
+        "Preescolar": 0,
+        "Primaria": 0,
+        "Secundaria": 0
+    }
+    
+    for cct in escuelas :
+        contador_escuelas[escuelas[cct]['nivel']] += 1
+    
+    num_paginas = 1
+    if len(escuelas) <= ESCUELAS_POR_PAGINA :
+        # Hack para no mostrar el slider si existe una sola página
+        slider = dcc.Input(
+            type = 'hidden', 
+            value = 1,
+            id = 'slider-paginacion'
+        )
+    else :
+        num_paginas = len(escuelas) // ESCUELAS_POR_PAGINA + (1 if len(escuelas) % ESCUELAS_POR_PAGINA != 0 else 0)
+        
+        marcas = dict()
+        for i in range(1, num_paginas + 1) :
+            marcas[i] = {'label': "%d" % (i)}
+        
+        slider = dcc.Slider(
+            min = 1,
+            max = num_paginas,
+            value = 1,
+            marks = marcas,
+            included = False, 
+            id = 'slider-paginacion'
+        )
     
     # Crear layout de la página
     layout_reporte = dbc.Container([
@@ -36,8 +68,60 @@ def cargar_contenido_reporte_general(escuelas) :
         dbc.Row([
             # Layout del Scatterplot
             dbc.Col([
+                html.H5(
+                    "Reporte general",
+                    style = {
+                        "color": "#1199EE",
+                        "font-weight": "bold"
+                    },
+                ),
+                html.H3(
+                    "Resumen con la información general de las escuelas",
+                    style = {"font-weight": "bold"}
+                ),
+                html.P(
+                    "Explora la proyección, medidas de tendencia central y la " +
+                    "función de autocorrelación de la matrícula de las escuelas, " + 
+                    "así como su ubicación en el mapa. Da click sobre la clave " + 
+                    "del centro de trabajo de una escuela para obtener más detalles de ella.",
+                    style = {
+                        "text-align": "justify"
+                    }
+                ),
+                html.P("Este reporte contiene:", style = {"font-weight": "bold"}),
+                html.P([
+                    html.B("Preescolar: "),
+                    "%d %s" % (contador_escuelas['Preescolar'], "escuela" if contador_escuelas['Preescolar'] == 1 else "escuelas")],
+                    style = {"margin": "0"}
+                ),
+                html.P([
+                    html.B("Primarias: "),
+                    "%d %s" % (contador_escuelas['Primaria'], "escuela" if contador_escuelas['Primaria'] == 1 else "escuelas")],
+                    style = {"margin": "0"}
+                ),
+                html.P([
+                    html.B("Secundarias: "),
+                    "%d %s" % (contador_escuelas['Secundaria'], "escuela" if contador_escuelas['Secundaria'] == 1 else "escuelas")],
+                    style = {"margin": "0"}
+                )],
+                md = 6,
+                style = {
+                    "margin-top": "4rem",
+                }
+            ),
+            # Layout del mapa
+            dbc.Col(
+                dcc.Graph(figure = mapa, id = 'mapa-general'),
+                md = 6,
+            )],
+            justify = "center",
+            style = {"padding-left": "1rem"}
+        ),
+        # Renglón del scatterplot
+        dbc.Row(
+            dbc.Col([
                 dcc.Graph(
-                    figure = scatterplot, 
+                    #figure = scatterplot, 
                     id = 'scatterplot-general',
                     style = {
                         "margin-bottom" : "0", 
@@ -53,22 +137,27 @@ def cargar_contenido_reporte_general(escuelas) :
                         "padding" : "0"
                     }
                 )],
-                md = 6,
-            ),
-            # Layout del mapa
-            dbc.Col(
-                dcc.Graph(figure = mapa, id = 'mapa-general'),
-                md = 6,
-            )],
-            justify = "center"
+                md = 12
+            )
         ),
         # Renglón del boxplot
         dbc.Row(
             dbc.Col(
-                dcc.Graph(figure = boxplot, id = 'boxplot-general'),
+                dcc.Graph(
+                    #figure = boxplot, 
+                    id = 'boxplot-general'
+                ),
                 md = 12
             )
         ),
+        # Controles de paginación
+        dcc.Loading(
+            id = "loading-graficas",
+            type = "default",
+            children = html.Div(id = "salida-loading-graficas"),
+            #style = {"margin-top": "-5rem"}
+        ),
+        slider,
         # Renglón de las tablas de métricas y de matrícula
         dbc.Row([
             # Layout de la tabla de matrícula
@@ -88,13 +177,19 @@ def cargar_contenido_reporte_general(escuelas) :
                     ),
                     Download(id = "descargar_csv")]
                 )),
-                tabla_matricula],
+                html.Div(
+                    #tabla_matricula,
+                    id = 'div-tabla-matricula'
+                )],
                 md = 6,
             ),
             # Layout de la tabla de métricas
             dbc.Col([
                 html.H4(u"Métricas de la proyección"),
-                tabla_metricas],
+                html.Div(
+                    #tabla_metricas,
+                    id = 'div-tabla-metricas'
+                )],
                 md = 6,
             )]
         )],
@@ -143,3 +238,34 @@ def generar_csv(n_clicks, data, titulo_reporte) :
         return send_data_frame(dataframe.to_csv, filename = "%s.csv" % (titulo_reporte))
     else :
         raise PreventUpdate
+
+@app.callback(
+    [Output('div-tabla-matricula', 'children'),
+     Output('div-tabla-metricas', 'children'),
+     Output('scatterplot-general', 'figure'),
+     Output('boxplot-general', 'figure'),
+     Output('salida-loading-graficas', 'children')],
+    Input('slider-paginacion', 'value'),
+    State("session", "data")
+)
+def controlar_paginacion(num_pagina, data) :
+    if not num_pagina :
+        raise PreventUpdate
+
+    escuelas = data['escuelas']
+    escuelas_pagina = dict()
+    ccts = list(escuelas.keys())
+    
+    
+    primer_indice_pagina = (num_pagina - 1) * ESCUELAS_POR_PAGINA
+    ultimo_indice_pagina = min(num_pagina * ESCUELAS_POR_PAGINA, len(escuelas))
+    for i in range(primer_indice_pagina, ultimo_indice_pagina) :
+        cct = ccts[i]
+        escuelas_pagina[cct] = escuelas[cct]
+    
+    tabla_matricula = GeneradorDeGraficas.generar_tabla_matricula(escuelas_pagina)
+    tabla_metricas = GeneradorDeGraficas.generar_tabla_metricas(escuelas_pagina)
+    scatterplot = GeneradorDeGraficas.generar_scatterplot(escuelas_pagina)
+    boxplot = GeneradorDeGraficas.generar_boxplot(escuelas_pagina)
+    
+    return tabla_matricula, tabla_metricas, scatterplot, boxplot, None

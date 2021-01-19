@@ -5,6 +5,33 @@ from apps.utilidades_reporte import GeneradorDeGraficas
 
 from app import cache
 
+municipios_de_regiones = {
+    "32ADG0011N" : ['Calera', 'Morelos', 'Pánuco', 'Vetagrande', 'Villa de cos', 'Zacatecas'],
+    "32ADG0012M" : ['Cañitas de Felipe Pescador', 'Fresnillo', 'General Enrique Estrada', 'Valparaíso'],
+    "32ADG0013L" : ['Apozol', 'Huanusco', 'Jalpa', 'Juchipila', 'Mezquital del oro', 'Moyahua de Estrada', 'Tabasco'],
+    "32ADG0014K" : ['Atolinga', 'Benito Juárez', 'Momax', 'Santa María de la paz', 'Tepechitlán', 'Teúl de González Ortega', 'Tlaltenango de Sánchez Román', 'Trinidad García de la Cadena'],
+    "32ADG0015J" : ['General Francisco r Murguía', 'Juan Aldama', 'Miguel Auza', 'Río Grande'],
+    "32ADG0016I" : ['Concepción del oro', 'El Salvador', 'Mazapil', 'Melchor Ocampo'],
+    "32ADG0017H" : ['Pinos', 'Villa Hidalgo'],
+    "32ADG0018G" : ['El Plateado de Joaquín Amaro', 'Jerez', 'Monte Escobedo', 'Susticacán', 'Tepetongo', 'Villanueva'],
+    "32FSR0001J" : ['Loreto', 'Noria de Ángeles', 'Villa García', 'Villa González Ortega'],
+    "32ADG0021U" : ['Cuauhtémoc', 'Genaro Codina', 'General Pánfilo Natera', 'Guadalupe', 'Luis Moya', 'Ojocaliente', 'Trancoso'],
+    "32ADG0022T" : ['Chalchihuites', 'Jiménez del Teul', 'Sain Alto', 'Sombrerete'],
+    "32ADG0010O" : ['Calera', 'General Enrique Estrada', 'Morelos', 'Pánuco', 'Villa de cos', 'Zacatecas'],
+    "32ADG0025Q" : ['Cañitas de Felipe Pescador', 'Fresnillo'],
+    "32ADG0003E" : ['Apozol', 'Huanusco', 'Jalpa', 'Juchipila', 'Mezquital del oro', 'Moyahua de Estrada', 'Tabasco'],
+    "32ADG0004D" : ['Atolinga', 'Benito Juárez', 'Momax', 'Santa María de la paz', 'Tepechitlán', 'Teúl de González Ortega', 'Tlaltenango de Sánchez Román', 'Trinidad García de la Cadena'],
+    "32ADG0005C" : ['General Francisco r Murguía', 'Juan Aldama', 'Miguel Auza', 'Río Grande'],
+    "32ADG0006B" : ['Concepción del oro', 'El Salvador', 'Mazapil', 'Melchor Ocampo'],
+    "32ADG0007A" : ['Pinos', 'Villa Hidalgo'],
+    "32ADG0008Z" : ['El Plateado de Joaquín Amaro', 'Jerez', 'Monte Escobedo', 'Susticacán', 'Tepetongo', 'Villanueva'],
+    "32ADG0009Z" : ['Loreto', 'Noria de Ángeles', 'Villa García', 'Villa González Ortega'],
+    "32ADG0019F" : ['Cuauhtémoc', 'Genaro Codina', 'General Pánfilo Natera', 'Guadalupe', 'Luis Moya', 'Ojocaliente', 'Trancoso', 'Vetagrande'],
+    "32ADG0020V" : ['Chalchihuites', 'Jiménez del Teul', 'Sain Alto', 'Sombrerete'],
+    "32ADG0023S" : ['Apulco', 'Nochistlán de Mejía'],
+    "32ADG0026P" : ['Valparaíso']
+}
+
 class ElementosLayoutPrincipal :
     
     def __init__(self, titulo, label_dropdown, boton_regresar, boton_avanzar) :
@@ -67,7 +94,7 @@ class FabricaNodosRegion :
             boton_avanzar = dbc.Button([
                 'Ver escuelas ',
                 html.I(className="fas fa-plus")],
-                type = "button",
+                type = "submit",
                 style = {
                     "padding" : "0.2rem",
                     "margin" : "0.2rem 0.2rem 0.2rem 0.2rem",

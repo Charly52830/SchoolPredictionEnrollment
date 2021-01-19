@@ -27,6 +27,7 @@ MENSAJES_ERROR = {
 }
 
 REGIONES = cache['regiones']
+MUNICIPIOS = cache['municipios']
 
 def cargar_parametros(parametros) :
     GET = dict()
@@ -44,7 +45,7 @@ layout = dbc.Container([
     dbc.Row(
         dbc.Col([
             html.H2(
-                u"Consulta la matrícula escolar en Zacatecas y crea reportes con la proyección de matrícula",
+                u"Consulta la matrícula escolar en Zacatecas y crea reportes con su proyección",
                 style = {"text-align" : "center", "margin-top" : "4rem", "margin-bottom" : "3rem"}
             )],
             md = 8,
@@ -131,7 +132,7 @@ layout = dbc.Container([
                 ),
                 # Renglón con texto de estado
                 dbc.Row(
-                    html.H5(u"Por estado"),
+                    html.H5(u"Por municipio"),
                     justify="center",
                     style = {"margin-top" : "0.5rem"}
                 )]
@@ -206,11 +207,13 @@ def display_page(pathname, parametros, data):
                     )
                 # Si la región existe generar un reporte
                 else :
-                    # Activar la sesión
-                    data['session_active'] = True
-                    
                     # Obtener las escuelas de la región
                     region = GET['region']
+                
+                    # Activar la sesión
+                    data['session_active'] = True
+                    data['titulo_reporte'] = "Escuelas en la región %s" % (REGIONES[region]['nombre'])
+                    
                     __escuelas = dict()
                     for cct in cache['escuelas'] :
                         if cache['escuelas'][cct]['region'] == region :
@@ -222,7 +225,8 @@ def display_page(pathname, parametros, data):
                     pagina = plantilla_reporte.cargar_plantilla_reporte(
                         contenido = reporte_general.cargar_contenido_reporte_general(
                             escuelas = ordenar_escuelas(data['escuelas'])
-                        )
+                        ),
+                        titulo_reporte = data['titulo_reporte']
                     )
                 
             # Reporte de escuelas
@@ -280,13 +284,54 @@ def display_page(pathname, parametros, data):
                             escuelas = ordenar_escuelas(data['escuelas'])
                         )
                     )
+            # Reporte de municipio
+            elif GET['tipo_reporte'] == 'reporte_municipio' :
+                # Validar parámetros
+                parametros_validos = 'id_municipio' in GET
+                
+                id_municipio = int(GET['id_municipio'])
+                
+                # Si la estructura de los parámetros no es válida regresar 404
+                if not parametros_validos :
+                    pagina = '404'
+                # Si el municipio es inválido regresar 404
+                elif id_municipio < 0 or id_municipio >= len(MUNICIPIOS) :
+                    pagina = '404'
+                # Si el municipio existe generar un reporte
+                else :
+                    # Obtener las escuelas de la región
+                    municipio = list(MUNICIPIOS.keys())[id_municipio]
+                
+                    # Activar la sesión
+                    data['session_active'] = True
+                    data['titulo_reporte'] = 'Escuelas en el municipio de %s' % (municipio)
+                    
+                    __escuelas = dict()
+                    for cct in cache['escuelas'] :
+                        if cache['escuelas'][cct]['mun'] == municipio :
+                            __escuelas[cct] = cache['escuelas'][cct]
+                    
+                    # Ordenar las escuelas
+                    data['escuelas'] = ordenar_escuelas(__escuelas)
+                    
+                    pagina = plantilla_reporte.cargar_plantilla_reporte(
+                        contenido = reporte_general.cargar_contenido_reporte_general(
+                            escuelas = ordenar_escuelas(data['escuelas'])
+                        ),
+                        titulo_reporte = data['titulo_reporte']
+                    )
+                
                 
         # Solicitud de volver a la página del reporte
         elif data['session_active'] :
+            titulo_reporte = None
+            if 'titulo_reporte' in data :
+                titulo_reporte = data['titulo_reporte']
             pagina = plantilla_reporte.cargar_plantilla_reporte(
                 contenido = reporte_general.cargar_contenido_reporte_general(
                     escuelas = ordenar_escuelas(data['escuelas'])
-                )
+                ),
+                titulo_reporte = titulo_reporte
             )
     
     # Reporte individual

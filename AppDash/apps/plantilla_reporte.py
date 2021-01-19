@@ -111,7 +111,7 @@ sidebar = dbc.Navbar([
     className = "nav flex-column",
 )
 
-def cargar_plantilla_reporte(contenido) :
+def cargar_plantilla_reporte(contenido, titulo_reporte = None) :
     """
     Función para cargar una página que usa como plantilla el layout del reporte.
     
@@ -133,7 +133,8 @@ def cargar_plantilla_reporte(contenido) :
                         type = "text",
                         placeholder = u"Reporte sin título", 
                         style = {"text-align" : "center"},
-                        id = 'input-titulo-reporte'
+                        id = 'input-titulo-reporte',
+                        value = titulo_reporte
                     )),
                     no_gutters = True,
                     className = "d-flex justify-content-center",
