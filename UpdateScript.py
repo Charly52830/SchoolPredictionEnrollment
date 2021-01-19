@@ -432,7 +432,7 @@ def actualizar_datos_estado() :
     municipios = dict()
     
     # Datos del estado
-    estado = dict()
+    estados = dict()
     
     def acumular_escuelas(conjunto, llave, omitir_llaves_perdidas = True) :
         """
@@ -516,9 +516,10 @@ def actualizar_datos_estado() :
         llave = 'mun', 
         omitir_llaves_perdidas = False
     )
+    print(municipios.keys())
     
-    estado = acumular_escuelas(
-        conjunto = estado, 
+    estados = acumular_escuelas(
+        conjunto = estados,
         llave = None, 
         omitir_llaves_perdidas = False
     )
@@ -527,7 +528,7 @@ def actualizar_datos_estado() :
         'escuelas' : datos_completos_escuelas,
         'regiones' : regiones,
         'municipios': municipios,
-        'estado': estado['Zacatecas']
+        'estados': estados
     }
     
     with open("AppDash/DatosEscuelas.json", "w+") as outfile:  

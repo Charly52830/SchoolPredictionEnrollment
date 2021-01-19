@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
@@ -9,17 +10,76 @@ from dash_extensions import Download
 
 from app import app, cache
 from apps.utilidades_reporte import GeneradorDeGraficas
+from apps.FabricasNodos import Nodo, ElementosLayoutPrincipal, FabricaNodosRegion, FabricaNodosMunicipio
+
+municipios_de_regiones = {
+    "32ADG0011N" : ['Calera', 'Morelos', 'Pánuco', 'Vetagrande', 'Villa de cos', 'Zacatecas'],
+    "32ADG0012M" : ['Cañitas de Felipe Pescador', 'Fresnillo', 'General Enrique Estrada', 'Valparaíso'],
+    "32ADG0013L" : ['Apozol', 'Huanusco', 'Jalpa', 'Juchipila', 'Mezquital del oro', 'Moyahua de Estrada', 'Tabasco'],
+    "32ADG0014K" : ['Atolinga', 'Benito Juárez', 'Momax', 'Santa María de la paz', 'Tepechitlán', 'Teúl de González Ortega', 'Tlaltenango de Sánchez Román', 'Trinidad García de la Cadena'],
+    "32ADG0015J" : ['General Francisco r Murguía', 'Juan Aldama', 'Miguel Auza', 'Río Grande'],
+    "32ADG0016I" : ['Concepción del oro', 'El Salvador', 'Mazapil', 'Melchor Ocampo'],
+    "32ADG0017H" : ['Pinos', 'Villa Hidalgo'],
+    "32ADG0018G" : ['El Plateado de Joaquín Amaro', 'Jerez', 'Monte Escobedo', 'Susticacán', 'Tepetongo', 'Villanueva'],
+    "32FSR0001J" : ['Loreto', 'Noria de Ángeles', 'Villa García', 'Villa González Ortega'],
+    "32ADG0021U" : ['Cuauhtémoc', 'Genaro Codina', 'General Pánfilo Natera', 'Guadalupe', 'Luis Moya', 'Ojocaliente', 'Trancoso'],
+    "32ADG0022T" : ['Chalchihuites', 'Jiménez del Teul', 'Sain Alto', 'Sombrerete'],
+    "32ADG0010O" : ['Calera', 'General Enrique Estrada', 'Morelos', 'Pánuco', 'Villa de cos', 'Zacatecas'],
+    "32ADG0025Q" : ['Cañitas de Felipe Pescador', 'Fresnillo'],
+    "32ADG0003E" : ['Apozol', 'Huanusco', 'Jalpa', 'Juchipila', 'Mezquital del oro', 'Moyahua de Estrada', 'Tabasco'],
+    "32ADG0004D" : ['Atolinga', 'Benito Juárez', 'Momax', 'Santa María de la paz', 'Tepechitlán', 'Teúl de González Ortega', 'Tlaltenango de Sánchez Román', 'Trinidad García de la Cadena'],
+    "32ADG0005C" : ['General Francisco r Murguía', 'Juan Aldama', 'Miguel Auza', 'Río Grande'],
+    "32ADG0006B" : ['Concepción del oro', 'El Salvador', 'Mazapil', 'Melchor Ocampo'],
+    "32ADG0007A" : ['Pinos', 'Villa Hidalgo'],
+    "32ADG0008Z" : ['El Plateado de Joaquín Amaro', 'Jerez', 'Monte Escobedo', 'Susticacán', 'Tepetongo', 'Villanueva'],
+    "32ADG0009Z" : ['Loreto', 'Noria de Ángeles', 'Villa García', 'Villa González Ortega'],
+    "32ADG0019F" : ['Cuauhtémoc', 'Genaro Codina', 'General Pánfilo Natera', 'Guadalupe', 'Luis Moya', 'Ojocaliente', 'Trancoso', 'Vetagrande'],
+    "32ADG0020V" : ['Chalchihuites', 'Jiménez del Teul', 'Sain Alto', 'Sombrerete'],
+    "32ADG0023S" : ['Apulco', 'Nochistlán de Mejía'],
+    "32ADG0026P" : ['Valparaíso']
+}
 
 layout = html.Div([
     dcc.Store(id = 'local-data', storage_type = 'local'),
+    dcc.Store(id = 'nombre-hijo', storage_type = 'local'),
     # Hack para activar el callback al cargar la página
     html.Button(id = 'zoom-in', hidden = True),
     # Hack para activar el callback al cargar la página
     html.Button(id = 'zoom-out', hidden = True),
+    # Hack para activar el callback al cargar la página
     html.Div(id = 'contenido-principal'),
 ])
 
-def cargar_plantilla_principal(scatterplot, lista_hijos) :
+def obtener_escuelas(id_campo) :
+    """
+    """
+    escuelas = cache['escuelas']
+    
+    if id_campo == 'Estado' :
+        return escuelas
+    
+    llave = None
+    if id_campo in cache['regiones'] :
+        llave = 'region'
+    elif id_campo in cache['municipios'] :
+        llave = 'mun'
+    
+    ans = dict()
+    for cct in escuelas :
+        if escuelas[cct][llave] == id_campo :
+            ans[cct] = escuelas[cct]
+
+    return ans
+
+def cargar_plantilla_principal(nodo, hijo = None) :
+    """
+    """
+    layout_nodo = nodo.layout
+    if nodo.hijos :
+        hijo = hijo or list(nodo.hijos.keys())[0]
+    
+    scatterplot = nodo.generar_scatterplot_general()
+    
     navbar = dbc.Navbar([
         dbc.Row(
             dbc.Col(
@@ -38,7 +98,7 @@ def cargar_plantilla_principal(scatterplot, lista_hijos) :
         dbc.Container(
             dbc.Row(
                 dbc.Col(
-                    html.H3("Matrícula escolar por estado"),
+                    html.H3(layout_nodo.titulo),
                     style = {"color":"#1199EE"}
                 ),
                 align = "center"
@@ -55,15 +115,16 @@ def cargar_plantilla_principal(scatterplot, lista_hijos) :
     tarjeta_botones = dbc.Card(
         dbc.CardBody([
             html.Label(
-                "Selecciona un estado:",
+                #"Selecciona un estado:",
+                layout_nodo.label_dropdown,
                 htmlFor = 'num-hijo'
             ),
             dcc.Dropdown(
                 id = 'num-hijo',
                 options = [
-                    {'label': hijo, 'value': val}
-                for hijo, val in lista_hijos],
-                value = lista_hijos[0][1],
+                    {'label': hijo, 'value': hijo}
+                for hijo in nodo.hijos],
+                value = hijo,
                 style = {"margin" : "0 0.2rem 0.2rem 0.2rem"},
             ),
             dbc.Button([
@@ -78,30 +139,8 @@ def cargar_plantilla_principal(scatterplot, lista_hijos) :
                 id = "boton-generar-csv-individual"
             ),
             Download(id = "generar-csv-individual"),
-            dbc.Button([
-                'Regresar ',
-                html.I(className="fas fa-minus")],
-                type = "button",
-                style = {
-                    "padding" : "0.2rem",
-                    "margin" : "0.2rem 0.2rem 0.2rem 0.2rem",
-                    "background" : "#FF0055",
-                    "border-color" : "#FF0055"
-                },
-                id = 'zoom-out'
-            ),
-            dbc.Button([
-                'Ver regiones ',
-                html.I(className="fas fa-plus")],
-                type = "button",
-                style = {
-                    "padding" : "0.2rem",
-                    "margin" : "0.2rem 0.2rem 0.2rem 0.2rem",
-                    "background" : "#1199EE",
-                    "border-color" : "#1199EE"
-                },
-                id = 'zoom-in'
-            )]
+            layout_nodo.boton_regresar,
+            layout_nodo.boton_avanzar]
         ),
         style = {"margin": "0 1rem 1rem 1rem"}
     )
@@ -127,7 +166,8 @@ def cargar_plantilla_principal(scatterplot, lista_hijos) :
     return layout
 
 def cargar_plantilla_secundaria(serie_de_tiempo, escuelas) :
-
+    """
+    """
     nombre_serie = serie_de_tiempo['nombre']
     scatterplot = GeneradorDeGraficas.generar_scatterplot(
         {nombre_serie : serie_de_tiempo}, 
@@ -193,60 +233,178 @@ def cargar_plantilla_secundaria(serie_de_tiempo, escuelas) :
     
     return layout
     
-def cargar_contenido_estado() :
-    scatterplot = GeneradorDeGraficas.generar_scatterplot(
+# Crear nodos
+layout_root = ElementosLayoutPrincipal(
+    titulo = "Matrícula por estado",
+    label_dropdown = "Selecciona un estado:",
+    boton_regresar = dbc.Button([
+        'Regresar ',
+        html.I(className="fas fa-minus")],
+        type = "button",
+        style = {
+            "padding" : "0.2rem",
+            "margin" : "0.2rem 0.2rem 0.2rem 0.2rem",
+            "background" : "#FF0055",
+            "border-color" : "#FF0055"
+        },
+        id = 'zoom-out',
+        disabled = True
+    ),
+    boton_avanzar = dbc.Button([
+        'Ver regiones ',
+        html.I(className="fas fa-plus")],
+        type = "button",
+        style = {
+            "padding" : "0.2rem",
+            "margin" : "0.2rem 0.2rem 0.2rem 0.2rem",
+            "background" : "#1199EE",
+            "border-color" : "#1199EE"
+        },
+        id = 'zoom-in'
+    ),
+)
+
+ROOT = Nodo(
+    layout = layout_root,
+    id = None,
+    grafica_general = GeneradorDeGraficas.generar_scatterplot(
         cache['municipios'],
         title = 'Matrícula por municipios'
     )
+)
+
+layout_zacatecas = ElementosLayoutPrincipal(
+    titulo = 'Matrícula por regiones',
+    label_dropdown = 'Selecciona region:',
+    boton_regresar = dbc.Button([
+        'Ver estado ',
+        html.I(className="fas fa-minus")],
+        type = "button",
+        style = {
+            "padding" : "0.2rem",
+            "margin" : "0.2rem 0.2rem 0.2rem 0.2rem",
+            "background" : "#FF0055",
+            "border-color" : "#FF0055"
+        },
+        id = 'zoom-out'
+    ),
+    boton_avanzar = dbc.Button([
+        'Ver municipios ',
+        html.I(className="fas fa-plus")],
+        type = "button",
+        style = {
+            "padding" : "0.2rem",
+            "margin" : "0.2rem 0.2rem 0.2rem 0.2rem",
+            "background" : "#1199EE",
+            "border-color" : "#1199EE"
+        },
+        id = 'zoom-in'
+    )
+)
+
+zacatecas = Nodo(
+    layout = layout_zacatecas,
+    id = 'Estado',
+    serie_individual = cache['estados']['Zacatecas']
+)
+
+TREE = [ROOT, zacatecas]
+ROOT.agregar_hijo(zacatecas)
+
+#nodo_municipio_guadalupe = FabricaNodosMunicipio.generar_nodo('Guadalupe')
+#print(nodo_municipio_guadalupe)
+
+regiones = cache['regiones']
+for region in regiones :
+    nodo_region = FabricaNodosRegion.generar_nodo(id_region = region) 
+    TREE.append(nodo_region)
+    zacatecas.agregar_hijo(nodo_region)
     
-    lista_hijos = [
-        ('Zacatecas', 'Zacatecas'),
-        ('Aguascalientes', 'Aguascalientes')
-    ]
+    for municipio in municipios_de_regiones[region] :
+        nodo_municipio = FabricaNodosMunicipio.generar_nodo(id_municipio = municipio)
+        TREE.append(nodo_municipio)
+        nodo_region.agregar_hijo(nodo_municipio)
     
-    return cargar_plantilla_principal(scatterplot, lista_hijos)
-
-def cargar_contenido_regiones() :
-    return html.H1("Regiones en construcción")
-
-def cargar_contenido_municipios(id_region) :
-    return html.H1("Municipios en construcción")
-
 @app.callback(
     [Output('contenido-principal', 'children'),
      Output('local-data', 'data')],
     [Input('zoom-out', 'n_clicks'),
      Input('zoom-in', 'n_clicks')],
-    [State('local-data', 'data')]
+    [State('local-data', 'data'),
+     State('nombre-hijo', 'data')]
 )
-def controlar_contenido_principal(click_regresar, click_avanzar, data) :
-    data = data or {'nivel' : 'estado', 'id' : 'estado'}
-    pagina = '404'
+def controlar_contenido_principal(click_regresar, click_avanzar, data, data_hijo) :
+    """
+    """
+    # Identificar cual de los dos botones se activó
+    context = dash.callback_context
+    boton_activado = context.triggered[0]['prop_id'].split('.')[0]
     
-    if click_avanzar :
-        pagina = html.H1("Estas avanzando")
-    elif click_regresar :
-        pagina = html.H1("Estas retrocediendo")
-    else :
-        # Cargar página por default
-        if data['nivel'] == 'estado' :
-            pagina = cargar_contenido_estado()
-        elif data['nivel'] == 'regiones' :
-            pagina = cargar_contenido_regiones()
-        elif data['nivel'] == 'municipios' :
-            pagina = cargar_contenido_municipios(id_region = data['id'])
-        else :
+    # Obtener los datos del nodo actual
+    data = data or {'index-nodo': 0}
+    index = data['index-nodo']
+    nodo = TREE[index]
+
+    # Para mostrar el layout el nodo actual debe tener hijos
+    if not nodo.hijos :
+        print("No tiene hijos")
+        raise PreventUpdate
+    
+    pagina = None
+    
+    if boton_activado == "zoom-in" :
+        # Obtener hijo seleccionado en el dropdown de hijos, 
+        # o escoger uno por defecto en caso de que el dropdown no haya sido activado
+        primer_hijo = list(nodo.hijos.keys())[0]
+        data_hijo = data_hijo or {'nombre-hijo': primer_hijo}
+        nombre_hijo = data_hijo['nombre-hijo']
+        
+        # No se puede mostrar el layout de un hijo inválido
+        if nombre_hijo not in nodo.hijos :
             raise PreventUpdate
+        
+        hijo = nodo.hijos[nombre_hijo]
+        
+        # No se puede mostrar el layout de un hijo sin hijos
+        if not hijo.hijos :
+            raise PreventUpdate
+        
+        # Si el hijo es válido, actualizar el nodo para que se muestre el layout del hijo
+        pagina = cargar_plantilla_principal(hijo)
+        nodo = hijo
+        
+    elif boton_activado == "zoom-out" :
+        # No se puede mostrar el layout de un padre inexistente
+        if not nodo.padre :
+            raise PreventUpdate
+        
+        # Si el padre existe, actualizar el nodo para que se muestre el layout del padre
+        pagina = cargar_plantilla_principal(nodo.padre, nodo.serie_individual['nombre'])
+        nodo = nodo.padre
+    
+    # Actualizar el layout y el índice del nodo
+    pagina = pagina or cargar_plantilla_principal(nodo)
+    data['index-nodo'] = TREE.index(nodo)
         
     return pagina, data
 
 @app.callback(
     [Output('contenido-individual', 'children'),
-     Output("loading-output-1", "children")],
+     Output("loading-output-1", "children"),
+     Output('nombre-hijo', 'data')],
     Input('num-hijo', 'value'),
     State('local-data', 'data')
 )
-def controlar_contenido_individual(valor, data) :
-    data = data or {'nivel' : 'estado', 'id' : 'estado'}
+def controlar_contenido_individual(nombre_hijo, data) :
+    data = data or {'index-nodo': 0}
+    index = data['index-nodo']
+    nodo = TREE[index]
     
-    return cargar_plantilla_secundaria(cache['estado'], cache['escuelas']), None
+    if not nodo.hijos :
+        print("No tiene hijos")
+        raise PreventUpdate
+    
+    nodo = nodo.hijos[nombre_hijo]
+    escuelas = obtener_escuelas(nodo.id)
+    
+    return cargar_plantilla_secundaria(nodo.serie_individual, obtener_escuelas(nodo.id)), None, {'nombre-hijo': nombre_hijo}
