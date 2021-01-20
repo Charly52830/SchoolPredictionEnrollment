@@ -249,20 +249,49 @@ def generar_csv(n_clicks, data, titulo_reporte) :
     State("session", "data")
 )
 def controlar_paginacion(num_pagina, data) :
+    """
+    Callback que controla cuáles son las escuelas que se muestran en el reporte.
+    Se activa cuando cambia el valor del slider-paginacion.
+    
+    El número de escuelas que se muestran está definido por la constante
+    ESCUELAS_POR_PAGINA.
+    
+    Args:
+        num_pagina (int): número de página que se desea mostrar.
+        data (dict): diccionario que contiene los datos de las escuelas.
+    
+    Returns:
+        tabla_matricula (:obj: `dash_bootstrap_components.Table`): layout de una
+            tabla con la matrícula de las escuelas que le corresponden a esa página.
+        tabla_metricas (:obj: `dash_bootstrap_components.Table`): layout de una
+            tabla con las métricas de predicción de las escuelas que le corresponden 
+            a esa página.
+        scatterplot (:obj: `plotly.express.line`): gráfica que contiene los 
+            scatterplot de las escuelas que le corresponden a esa página.
+        boxplot (:obj: `plotly.graph_objs.Figure`): gráfica que contiene los 
+            boxplot de las escuelas que le corresponden a esa página.
+        salida-loading-graficas (:obj:): salida del loading para mostrar el gif 
+            de carga en lo que el callback se termina de ejecutar. No hace falta 
+            regresar un valor específico, por lo que se regresa None.
+    """
     if not num_pagina :
         raise PreventUpdate
 
+    # Obtener escuelas
     escuelas = data['escuelas']
     escuelas_pagina = dict()
     ccts = list(escuelas.keys())
     
-    
+    # Obtener los índices que le corresponden a la página
     primer_indice_pagina = (num_pagina - 1) * ESCUELAS_POR_PAGINA
     ultimo_indice_pagina = min(num_pagina * ESCUELAS_POR_PAGINA, len(escuelas))
+    
+    # Crear un subconjunto de las escuelas
     for i in range(primer_indice_pagina, ultimo_indice_pagina) :
         cct = ccts[i]
         escuelas_pagina[cct] = escuelas[cct]
     
+    # Crear gráficas
     tabla_matricula = GeneradorDeGraficas.generar_tabla_matricula(escuelas_pagina)
     tabla_metricas = GeneradorDeGraficas.generar_tabla_metricas(escuelas_pagina)
     scatterplot = GeneradorDeGraficas.generar_scatterplot(escuelas_pagina)

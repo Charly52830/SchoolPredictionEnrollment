@@ -251,3 +251,22 @@ def controlar_botones_de_navegacion(pathname, data) :
         return False, next_disabled, previous_href, next_href
     else :
         raise PreventUpdate
+
+@app.callback(
+    Output('data-titulo-reporte', 'data'),
+    Input('input-titulo-reporte', 'value')
+)
+def actualizar_nombre_reporte(nombre_reporte) :
+    """
+    Callback para actualizar el título del reporte.
+    Se activa cuando cambia el valor del input-titulo-reporte, la actualización
+    se realiza en un Dcc.Storage exclusivo del nombre del reporte.
+    
+    Args:
+        nombre_reporte (str): valor con el que se actualiza el input
+    
+    Returns:
+        data (dict): diccionario con la llave titulo-reporte actualizada
+    """
+    data = {'titulo-reporte': nombre_reporte}
+    return data

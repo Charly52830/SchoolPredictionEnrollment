@@ -400,6 +400,10 @@ def actualizar_datos_estado() :
         datos_completos_escuelas[cct] = escuela
     
     # Datos de las regiones
+    
+    # Nota importante (20/01/21):
+	# Las escuelas de la región de Loreto Estatal se encuentran con la region 
+	# 32FSR0001J y no con la 32ADG0127N como debería de ser
     regiones = {
 		"32ADG0012M" : {"nombre" : "Fresnillo Estatal"},
 		"32ADG0025Q" : {"nombre" : "Fresnillo Federal"},
@@ -434,20 +438,65 @@ def actualizar_datos_estado() :
     # Datos del estado
     estados = dict()
     
-    def acumular_escuelas(conjunto, llave, omitir_llaves_perdidas = True) :
+    def acumular_escuelas(conjunto, llave = None, omitir_llaves_perdidas = True) :
         """
+        Función para crear nuevas series de tiempo a partir de las series de las
+        escuelas. Las nuevas serie se crean sumando los valores de todas las
+        escuelas que pertenecen a una misma serie.
+        
+        Args:
+            conjunto (dict): diccionario en el que se guardarán los datos.
+            llave (str, optional): llave que determina el criterio por el que se 
+                acumularán las escuelas. Debe ser 'mun' para acumular por municipios 
+                o 'region' para acumular por region. Si no se especifica la llave 
+                entonces todas las escuelas se acumularán en una sola serie de 
+                tiempo que representa a la serie de tiempo del estado de Zacatecas.
+            omitir_llaves_perdidas (bool, optional): si es True no se crearán nuevas
+                series de tiempo cuando se encuentre una nueva llave, si es False
+                pasará lo contrario.
+        
+        Returns:
+            conjunto (dict): diccionario que contiene una serie de tiempo con la
+                misma estructura que tienen las escuelas en el diccionario
+                datos_completos_escuelas, pero sin todos los campos.
+                
+                Los campos de las nuevas series de tiempo son :
+                - matricula
+                - prediccion
+                - mae
+                - rmse
+                - mape
+                - metodo
+                - nombre
+                - primer año
         """
         
         def merge(matricula_1, matricula_2) :
             """
-            """
+            Función que suma las posiciones de dos listas de números comenzando
+            por la última posición.
             
+            Args:
+                matricula_1 (list): lista de enteros que representan los datos
+                    de una matrícula.
+                matricula_2 (list): lista de enteros que representan los datos
+                    de una matrícula.
+            
+            Returns:
+                matricula_acumulada (list): lista de enteros de tamaño que contiene
+                    en cada posición la suma de ambas matriculas en la posición
+                    que le corresponde.
+            
+            """
+            # Crear nuevo objeto para guardar las sumas
             matricula_acumulada = [0] * max(len(matricula_1), len(matricula_2))
             
+            # Inicializar indices
             i = len(matricula_1) - 1
             j = len(matricula_2) - 1
             k = len(matricula_acumulada) - 1
             
+            # Combinar las matriculas
             while i >= 0 or j >= 0 :
                 if i >= 0 :
                     matricula_acumulada[k] += matricula_1[i]
@@ -467,7 +516,6 @@ def actualizar_datos_estado() :
                 
             primer_anio_escuela = datos_completos_escuelas[cct]['primer_anio']
             matricula_escuela = datos_completos_escuelas[cct]['matricula']
-            prediccion_escuela = datos_completos_escuelas[cct]['pred']
             
             # La región o el municipio de la escuela no se encuentra en el conjunto
             if not elemento in conjunto :
@@ -482,17 +530,16 @@ def actualizar_datos_estado() :
             if not 'matricula' in conjunto[elemento] :
                 conjunto[elemento]['matricula'] = matricula_escuela
                 conjunto[elemento]['primer_anio'] = primer_anio_escuela
-                conjunto[elemento]['pred'] = prediccion_escuela
+            
             # Ya se agregó al menos una escuela a la región
             else :
                 matricula_elemento = conjunto[elemento]['matricula']
                 primer_anio_elemento = conjunto[elemento]['primer_anio']
-                prediccion_elemento = conjunto[elemento]['pred']
+                #prediccion_elemento = conjunto[elemento]['pred']
                 
                 assert(primer_anio_escuela + len(matricula_escuela) == primer_anio_elemento + len(matricula_elemento))
                 conjunto[elemento]['matricula'] = merge(matricula_elemento, matricula_escuela)
                 conjunto[elemento]['primer_anio'] = min(primer_anio_escuela, primer_anio_elemento)
-                conjunto[elemento]['pred'] = list(map(int, list(np.array(prediccion_escuela) + np.array(prediccion_elemento))))
         
         # Eliminar los 2 primeros años si la matrícula comienza en 1996
         for elemento in conjunto :
@@ -503,21 +550,52 @@ def actualizar_datos_estado() :
                 conjunto[elemento]['matricula'] = matricula[2:]
                 conjunto[elemento]['primer_anio'] = 1998
         
-        return conjunto
+        # Realizar la predicción de los datos
+        from Proyeccion.Metodos.ExpertsOpinion import evaluate_and_predict_ep
+        contador_elementos = 1
         
+        print("Comenzando predicción")
+        for elemento in conjunto :
+            matricula = np.array(conjunto[elemento]['matricula'])
+            
+            proy_matricula_futura, proy_matricula_historica = evaluate_and_predict_ep(matricula)
+            matricula_historica_real = matricula[5:]
+            metodo = 'EP'
+            
+            # Calcular los errores
+            mae = np.abs(proy_matricula_historica - matricula_historica_real).mean()
+            rmse = np.sqrt(np.square(proy_matricula_historica - matricula_historica_real).mean())
+            mape = np.abs((proy_matricula_historica - matricula_historica_real) / matricula_historica_real).mean()
+            
+            proy_matricula_futura = proy_matricula_futura.astype(np.int)
+            
+            # Asignar los valores
+            conjunto[elemento]['pred'] = list(map(int, proy_matricula_futura))
+            conjunto[elemento]['mae'] = round(mae, 2)
+            conjunto[elemento]['rmse'] = round(rmse, 2)
+            conjunto[elemento]['mape'] = round(mape, 2)
+            conjunto[elemento]['metodo'] = metodo
+        
+            print("Elemento %d / %d terminado" % (contador_elementos, len(conjunto)))
+            contador_elementos += 1
+        
+        return conjunto
+    
+    print("Acumulando escuelas por regiones")
     regiones = acumular_escuelas(
         conjunto = regiones, 
         llave = 'region', 
         omitir_llaves_perdidas = True
     )
     
+    print("Acumulando escuelas por municipios")
     municipios = acumular_escuelas(
         conjunto = municipios, 
         llave = 'mun', 
         omitir_llaves_perdidas = False
     )
-    print(municipios.keys())
     
+    print("Acumulando escuelas por estado")
     estados = acumular_escuelas(
         conjunto = estados,
         llave = None, 
