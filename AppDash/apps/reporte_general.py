@@ -155,7 +155,7 @@ def cargar_contenido_reporte_general(escuelas) :
             id = "loading-graficas",
             type = "default",
             children = html.Div(id = "salida-loading-graficas"),
-            #style = {"margin-top": "-5rem"}
+            style = {"margin-top": "-2rem"}
         ),
         slider,
         # Renglón de las tablas de métricas y de matrícula

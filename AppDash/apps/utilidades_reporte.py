@@ -211,10 +211,6 @@ class GeneradorDeGraficas :
             xaxis = dict(
 	            autorange = True,
 	            range = ["%d-08-01" % (primer_anio), "%d-08-01" % (ultimo_anio)],
-	            #rangeslider = dict(
-		        #    autorange = True,
-		        #    range = ["%d-08-01" % (primer_anio), "%d-08-01" % (ultimo_anio)]
-	            #),
 	            type = "date",
             ),
             title = title,
@@ -237,7 +233,8 @@ class GeneradorDeGraficas :
             dragmode="zoom",
             template="plotly_white",
             margin=dict(b = 50, r = 15),
-            legend_title = titulo_leyenda
+            legend_title = titulo_leyenda,
+            hovermode="x",
         )
         
         scatterplot.update_traces(
