@@ -111,7 +111,7 @@ sidebar = dbc.Navbar([
     className = "nav flex-column",
 )
 
-def cargar_plantilla_reporte(contenido) :
+def cargar_plantilla_reporte(contenido, titulo_reporte = None) :
     """
     Función para cargar una página que usa como plantilla el layout del reporte.
     
@@ -133,7 +133,8 @@ def cargar_plantilla_reporte(contenido) :
                         type = "text",
                         placeholder = u"Reporte sin título", 
                         style = {"text-align" : "center"},
-                        id = 'input-titulo-reporte'
+                        id = 'input-titulo-reporte',
+                        value = titulo_reporte
                     )),
                     no_gutters = True,
                     className = "d-flex justify-content-center",
@@ -250,3 +251,22 @@ def controlar_botones_de_navegacion(pathname, data) :
         return False, next_disabled, previous_href, next_href
     else :
         raise PreventUpdate
+
+@app.callback(
+    Output('data-titulo-reporte', 'data'),
+    Input('input-titulo-reporte', 'value')
+)
+def actualizar_nombre_reporte(nombre_reporte) :
+    """
+    Callback para actualizar el título del reporte.
+    Se activa cuando cambia el valor del input-titulo-reporte, la actualización
+    se realiza en un Dcc.Storage exclusivo del nombre del reporte.
+    
+    Args:
+        nombre_reporte (str): valor con el que se actualiza el input
+    
+    Returns:
+        data (dict): diccionario con la llave titulo-reporte actualizada
+    """
+    data = {'titulo-reporte': nombre_reporte}
+    return data

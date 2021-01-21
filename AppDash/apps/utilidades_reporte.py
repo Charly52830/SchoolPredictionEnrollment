@@ -23,6 +23,15 @@ TEXTO_TOOLTIP = {
     "PR" : u"Probabilidad de tomar una mala decisión basada en los resultados que arroja la proyección"
 }
 
+# Colores a utilizar en las métricas por cada escuela de
+COLORES_METRICAS = [
+    "#4DD500",
+    "#90D900",
+    "#D5DD00",
+    "#E1A500",
+    "#E56300",
+]
+
 def ordenar_escuelas(escuelas) :
     """
     Ordena las escuelas por su promedio de alumnos y devuelve un diccionario
@@ -45,9 +54,92 @@ def ordenar_escuelas(escuelas) :
     
     return escuelas_ordenadas
 
+class UtilidadesTablaMetricas :
+
+    def color_por_alumnos_promedio(error, PAG) :
+        """
+        Devuelve uno de los colores de la paleta dependiendo de qué tal bajo
+        sea el error con respecto al PAG.
+        
+        El PAG se divide entre 4 y se busca el color que le corresponde.
+        
+        Args:
+            error (float): error de la escuela a comparar con el PAG, específicamente,
+                debe de ser MAE o RMSE.
+            PAG (float): promedio de alumnos por grupo para compararse con el
+                error.
+        
+        Returns:
+            color (str): color que le corresponde al error.
+        
+        """
+        x = PAG / 4
+        for i in range(1, 4) :
+            if error < i * x :
+                return COLORES_METRICAS[i - 1]
+
+        return COLORES_METRICAS[-1]
+
+    def color_por_porcentage(error) :
+        """
+        Devuelve uno de los colores de la paleta dependiendo de que tan bajo
+        sea el error con respecto a la escala de 1 a 0.
+        
+        Todos los errores superiores a 0.5 son rojos, el resto de los colores
+        se decide encontrando el color correspondiente entre 0.125, 0.25, 0.375
+        y 0.5.
+        
+        Args:
+            error (float): error de la escuela, específicamente debe ser MAPE
+                o PR.
+        
+        Returns:
+            color (str): color que le corresponde al error.
+        """
+        for i in range(1, 4) :
+            if error < i * 0.125 :
+                return COLORES_METRICAS[i - 1]
+        return COLORES_METRICAS[-1]
+
+    def generar_layout_cabecera(titulo, campo, margin_left) :
+        """
+        Genera el layout que contiene el tooltip del encabezado, así como
+        la cabecera de la columnad de la tabla que le corresponde al campo.
+        
+        Args:
+            titulo (str): título que lleva el tooltip al mostrarse en pantalla.
+            campo (str): campo de la columna
+            margin_left (str): margen izquierdo del tooltip.
+        
+        Returns:
+            layout del encabezado de una columna
+        
+        """
+        layout = html.Th(
+            html.Div([
+                html.Span([
+                    titulo,
+                    html.Img(
+                        src = app.get_asset_url('%s.svg' % (campo.lower())),
+                        style = {"margin-bottom" : "5px"}
+                    ),
+                    html.Div(
+                        TEXTO_TOOLTIP[campo],
+                        className = "texto-tooltip",
+                    )],
+                    className = "contenido-tooltip",
+                    style = {"margin-left" : margin_left}
+                ),
+                campo],
+                className = "mi-tooltip",
+            )
+        )
+        
+        return layout
+
 class GeneradorDeGraficas :
 
-    def generar_scatterplot(escuelas, show_legend = True, title = u"Proyección de matrícula") :
+    def generar_scatterplot(escuelas, show_legend = True, title = u"Proyección de matrícula", titulo_leyenda = 'Escuelas') :
         """
         Función para generar una gráfica que contiene los Scatterplot de las 
         distintas escuelas.
@@ -59,7 +151,7 @@ class GeneradorDeGraficas :
             title (str, opcional): título a mostrar en la gráfica.
         
         Returns:
-            scatterplot (:obj: `plotly.graph_objs.Figure`): figura con los Scatterplot
+            scatterplot (:obj: `plotly.express.line`): figura con los Scatterplot
                 lista para ser utilizada por un objeto dcc.Graph.
         """
         # Obtener primer año que aparece
@@ -119,10 +211,6 @@ class GeneradorDeGraficas :
             xaxis = dict(
 	            autorange = True,
 	            range = ["%d-08-01" % (primer_anio), "%d-08-01" % (ultimo_anio)],
-	            #rangeslider = dict(
-		        #    autorange = True,
-		        #    range = ["%d-08-01" % (primer_anio), "%d-08-01" % (ultimo_anio)]
-	            #),
 	            type = "date",
             ),
             title = title,
@@ -145,7 +233,8 @@ class GeneradorDeGraficas :
             dragmode="zoom",
             template="plotly_white",
             margin=dict(b = 50, r = 15),
-            legend_title = "Escuelas"
+            legend_title = titulo_leyenda,
+            hovermode="x",
         )
         
         scatterplot.update_traces(
@@ -219,103 +308,16 @@ class GeneradorDeGraficas :
         Args:
             escuelas (:obj: `OrderedDict`): diccionario ordenado con los datos de
                 todas las escuelas que se quieren agregar a la tabla.
-            links_requeridos (bool, opcional): si es True las ccts tendrán un link que
+            links_requeridos (bool, optional): si es True las ccts tendrán un link que
                 lleve al reporte individual de las escuelas, si es False entonces
                 la cct solo será texto plano.
                 
         Returns:
             objeto con el layout de la tabla.
         """
-        
-        # Colores a utilizar en las métricas por cada escuela de
-        colores_metricas = [
-            "#4DD500",
-            "#90D900",
-            "#D5DD00",
-            "#E1A500",
-            "#E56300",
-        ]
-        
-        def color_por_alumnos_promedio(error, PAG) :
-            """
-            Devuelve uno de los colores de la paleta dependiendo de qué tal bajo
-            sea el error con respecto al PAG.
-            
-            El PAG se divide entre 4 y se busca el color que le corresponde.
-            
-            Args:
-                error (float): error de la escuela a comparar con el PAG, específicamente,
-                    debe de ser MAE o RMSE.
-                PAG (float): promedio de alumnos por grupo para compararse con el
-                    error.
-            
-            Returns:
-                color (str): color que le corresponde al error.
-            
-            """
-            x = PAG / 4
-            for i in range(1, 4) :
-                if error < i * x :
-                    return colores_metricas[i - 1]
-
-            return colores_metricas[-1]
-
-        def color_por_porcentage(error) :
-            """
-            Devuelve uno de los colores de la paleta dependiendo de que tan bajo
-            sea el error con respecto a la escala de 1 a 0.
-            
-            Todos los errores superiores a 0.5 son rojos, el resto de los colores
-            se decide encontrando el color correspondiente entre 0.125, 0.25, 0.375
-            y 0.5.
-            
-            Args:
-                error (float): error de la escuela, específicamente debe ser MAPE
-                    o PR.
-            
-            Returns:
-                color (str): color que le corresponde al error.
-            """
-            for i in range(1, 4) :
-                if error < i * 0.125 :
-                    return colores_metricas[i - 1]
-            return colores_metricas[-1]
-        
-        def generar_layout_cabecera(titulo, campo, margin_left) :
-            """
-            Genera el layout que contiene el tooltip del encabezado, así como
-            la cabecera de la columnad de la tabla que le corresponde al campo.
-            
-            Args:
-                titulo (str): título que lleva el tooltip al mostrarse en pantalla.
-                campo (str): campo de la columna
-                margin_left (str): margen izquierdo del tooltip.
-            
-            Returns:
-                layout del encabezado de una columna
-            
-            """
-            layout = html.Th(
-                html.Div([
-                    html.Span([
-                        titulo,
-                        html.Img(
-                            src = app.get_asset_url('%s.svg' % (campo.lower())),
-                            style = {"margin-bottom" : "5px"}
-                        ),
-                        html.Div(
-                            TEXTO_TOOLTIP[campo],
-                            className = "texto-tooltip",
-                        )],
-                        className = "contenido-tooltip",
-                        style = {"margin-left" : margin_left}
-                    ),
-                    campo],
-                    className = "mi-tooltip",
-                )
-            )
-            
-            return layout
+        color_por_porcentage = UtilidadesTablaMetricas.color_por_porcentage
+        color_por_alumnos_promedio = UtilidadesTablaMetricas.color_por_alumnos_promedio
+        generar_layout_cabecera = UtilidadesTablaMetricas.generar_layout_cabecera
         
         encabezados = [
             (u"Promedio de Alumnos por Grupo", "PAG", "-8rem"),
@@ -394,7 +396,7 @@ class GeneradorDeGraficas :
         
         return tabla
 
-    def generar_tabla_matricula(escuelas, links_requeridos = True) :
+    def generar_tabla_matricula(escuelas, links_requeridos = True, nombre_elementos = 'cct') :
         """
         Función para generar la tabla de matrícula. Alínea adecuadamente los
         datos de la matrícula en caso de que una escuela no cuente con suficientes
@@ -403,16 +405,18 @@ class GeneradorDeGraficas :
         Args:
             escuelas (:obj: `OrderedDict`): diccionario ordenado con los datos de
                 todas las escuelas que se quieren agregar a la tabla.
-            links_requeridos (bool, opcional): si es True las ccts tendrán un link que
+            links_requeridos (bool, optional): si es True las ccts tendrán un link que
                 lleve al reporte individual de las escuelas, si es False entonces
                 la cct solo será texto plano.
+            nombre_elementos(str, optional): nombre de los elementos en la primer
+                columna.
                 
         Returns:
             objeto con el layout de la tabla.
         """
         # Cabecera de la tabla
         anio_actual = date.today().year
-        nombre_columnas = ["cct"] + ["%d\n%d" % (anio, anio + 1) for anio in range(anio_actual - 5, anio_actual + 5)]
+        nombre_columnas = [nombre_elementos] + ["%d\n%d" % (anio, anio + 1) for anio in range(anio_actual - 5, anio_actual + 5)]
         cabecera = html.Thead(
             html.Tr([
                 html.Th(

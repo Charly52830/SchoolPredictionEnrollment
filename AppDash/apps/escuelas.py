@@ -124,7 +124,6 @@ def cargar_plantilla_formulario(ccts = [], mensaje_error = '') :
                 xs = 2,
                 style = {"margin-bottom" : "3rem", "margin-right" : "1rem", "margin-top" : "1rem"},
                 className = "d-flex justify-content-center"
-                
             ),
             # Botón para continuar
             dbc.Col(

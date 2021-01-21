@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-import json
 import re
-import numpy as np
 
 import dash_core_components as dcc
 import dash_html_components as html
@@ -18,6 +16,7 @@ app.layout = html.Div([
     dcc.Location(id = 'url', refresh = False),
     html.Div(id = 'page-content'),
     dcc.Store(id = 'session', storage_type = 'session'),
+    dcc.Store(id = 'data-titulo-reporte', storage_type = 'session'),
 ])
 
 MENSAJES_ERROR = {
@@ -27,8 +26,19 @@ MENSAJES_ERROR = {
 }
 
 REGIONES = cache['regiones']
+MUNICIPIOS = cache['municipios']
 
 def cargar_parametros(parametros) :
+    """
+    Función que realiza un parsing de un string para obtener los parámetros que
+    se pasan por una petición GET.
+    
+    Args:
+        parametros (str): string con los parámetros separados por &
+    
+    Returns:
+        GET (dict): diccionario con los parámetros como llave con su valor.
+    """
     GET = dict()
     
     llave_y_valor = parametros[1:].split('&')
@@ -44,7 +54,7 @@ layout = dbc.Container([
     dbc.Row(
         dbc.Col([
             html.H2(
-                u"Consulta la matrícula escolar en Zacatecas y crea reportes con la proyección de matrícula",
+                u"Consulta la matrícula escolar en Zacatecas y crea reportes con su proyección",
                 style = {"text-align" : "center", "margin-top" : "4rem", "margin-bottom" : "3rem"}
             )],
             md = 8,
@@ -123,16 +133,15 @@ layout = dbc.Container([
                                 style = {"font-size" : "7rem", "margin" : "1.5rem 2rem 1.5rem 2rem", "color" : "black"}
                             ),
                             type = "button",
-                            style = {"background" : "#1199EE", "border-color" : "#1199EE"},
-                            disabled = True
+                            style = {"background" : "#1199EE", "border-color" : "#1199EE"}
                         ),
-                        href = "#"
+                        href = "apps/estado"
                     ),
                     justify="center"
                 ),
                 # Renglón con texto de estado
                 dbc.Row(
-                    html.H5(u"Por estado"),
+                    html.H5(u"Por municipio"),
                     justify="center",
                     style = {"margin-top" : "0.5rem"}
                 )]
@@ -150,9 +159,10 @@ layout = dbc.Container([
      Output('session', 'data')],
     Input('url', 'pathname'),
     [State('url', 'search'),
-     State('session', 'data')]
+     State('session', 'data'),
+     State('data-titulo-reporte', 'data')]
 )
-def display_page(pathname, parametros, data):
+def display_page(pathname, parametros, data, data_titulo_reporte):
     """
     Función que administra todos los cambios de dirección URL que ocurren en la
     aplicación.
@@ -168,6 +178,7 @@ def display_page(pathname, parametros, data):
             sesión.
         parametros (str): parametros o 'query string' del URL en caso de que se
             realice una consulta.
+        data_titulo_reporte (dict): nombre del reporte de la sesión activa.
     Returns :
         pagina : componente de dash core, dash bootstrap o dash html con el layout
             de la página solicitada en caso de que se encuentre alguna, si no,
@@ -207,11 +218,13 @@ def display_page(pathname, parametros, data):
                     )
                 # Si la región existe generar un reporte
                 else :
-                    # Activar la sesión
-                    data['session_active'] = True
-                    
                     # Obtener las escuelas de la región
                     region = GET['region']
+                
+                    # Activar la sesión
+                    data['session_active'] = True
+                    titulo_reporte = "Escuelas en la región %s" % (REGIONES[region]['nombre'])
+                    
                     __escuelas = dict()
                     for cct in cache['escuelas'] :
                         if cache['escuelas'][cct]['region'] == region :
@@ -223,7 +236,8 @@ def display_page(pathname, parametros, data):
                     pagina = plantilla_reporte.cargar_plantilla_reporte(
                         contenido = reporte_general.cargar_contenido_reporte_general(
                             escuelas = ordenar_escuelas(data['escuelas'])
-                        )
+                        ),
+                        titulo_reporte = titulo_reporte
                     )
                 
             # Reporte de escuelas
@@ -269,6 +283,7 @@ def display_page(pathname, parametros, data):
                     
                     # Obtener la información de las escuelas
                     __escuelas = dict()
+                    
                     for cct in ccts :
                         __escuelas[cct] = cache['escuelas'][cct]
                     
@@ -280,13 +295,54 @@ def display_page(pathname, parametros, data):
                             escuelas = ordenar_escuelas(data['escuelas'])
                         )
                     )
+            # Reporte de municipio
+            elif GET['tipo_reporte'] == 'reporte_municipio' :
+                # Validar parámetros
+                parametros_validos = 'id_municipio' in GET
+                
+                id_municipio = int(GET['id_municipio'])
+                
+                # Si la estructura de los parámetros no es válida regresar 404
+                if not parametros_validos :
+                    pagina = '404'
+                # Si el municipio es inválido regresar 404
+                elif id_municipio < 0 or id_municipio >= len(MUNICIPIOS) :
+                    pagina = '404'
+                # Si el municipio existe generar un reporte
+                else :
+                    # Obtener las escuelas de la región
+                    municipio = list(MUNICIPIOS.keys())[id_municipio]
+                
+                    # Activar la sesión
+                    data['session_active'] = True
+                    titulo_reporte = 'Escuelas en el municipio de %s' % (municipio)
+                    
+                    __escuelas = dict()
+                    for cct in cache['escuelas'] :
+                        if cache['escuelas'][cct]['mun'] == municipio :
+                            __escuelas[cct] = cache['escuelas'][cct]
+                    
+                    # Ordenar las escuelas
+                    data['escuelas'] = ordenar_escuelas(__escuelas)
+                    
+                    pagina = plantilla_reporte.cargar_plantilla_reporte(
+                        contenido = reporte_general.cargar_contenido_reporte_general(
+                            escuelas = ordenar_escuelas(data['escuelas'])
+                        ),
+                        titulo_reporte = titulo_reporte
+                    )
                 
         # Solicitud de volver a la página del reporte
         elif data['session_active'] :
+            # Obtener el titulo del reporte
+            data_titulo_reporte = data_titulo_reporte or {'titulo_reporte': None}
+            titulo_reporte = data_titulo_reporte['titulo-reporte']
+            
             pagina = plantilla_reporte.cargar_plantilla_reporte(
                 contenido = reporte_general.cargar_contenido_reporte_general(
                     escuelas = ordenar_escuelas(data['escuelas'])
-                )
+                ),
+                titulo_reporte = titulo_reporte
             )
     
     # Reporte individual
@@ -295,12 +351,17 @@ def display_page(pathname, parametros, data):
         escuelas_reporte = data['escuelas']
         cct = pathname[-10:]
         
+        # Obtener el titulo del reporte
+        data_titulo_reporte = data_titulo_reporte or {'titulo_reporte': None}
+        titulo_reporte = data_titulo_reporte['titulo-reporte']
+        
         if cct in escuelas_reporte :
             pagina = plantilla_reporte.cargar_plantilla_reporte(
                 contenido = reporte_individual.cargar_contenido_reporte_individual(
                     escuelas = escuelas_reporte, 
                     cct = cct
-                )
+                ),
+                titulo_reporte = titulo_reporte
             )
     
     return pagina, data

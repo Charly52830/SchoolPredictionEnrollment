@@ -182,9 +182,8 @@ def cargar_contenido_reporte_individual(escuelas, cct) :
                 md = 2
             )],
         ),
-        # Renglón del scatterplot y el mapa
-        dbc.Row([
-            # Layout del scatterplot
+        # Renglón del scatterplot
+        dbc.Row(
             dbc.Col([
                 dcc.Graph(figure = scatterplot),
                 html.P(
@@ -197,6 +196,14 @@ def cargar_contenido_reporte_individual(escuelas, cct) :
                     className = "text-secondary",
                     style = {"font-size" : "0.5rem", "margin" : "0 0 0 4rem", "padding" : "0"}
                 )],
+                md = 12
+            )
+        ),
+        # Renglón del boxplot y el mapa
+        dbc.Row([
+            # Layout del boxplot
+            dbc.Col(
+                dcc.Graph(figure = boxplot),
                 md = 6
             ),
             # Layout del mapa
@@ -205,18 +212,12 @@ def cargar_contenido_reporte_individual(escuelas, cct) :
                 md = 6
             )]
         ),
-        # Renglón del correlograma y el boxplot
-        dbc.Row([
-            # Layout del correlograma
-            dbc.Col([
-                dcc.Graph(figure = correlograma_acf)],
-                md = 6
-            ),
-            # Layout del boxplot
-            dbc.Col([
-                dcc.Graph(figure = boxplot)],
-                md = 6
-            )]
+        # Renglón con el correlograma
+        dbc.Row(
+            dbc.Col(
+                dcc.Graph(figure = correlograma_acf),
+                md = 12
+            )
         ),
         # Renglón de las tablas de métricas y matrícula
         dbc.Row([
