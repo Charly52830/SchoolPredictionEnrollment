@@ -28,6 +28,65 @@ MENSAJES_ERROR = {
 REGIONES = cache['regiones']
 MUNICIPIOS = cache['municipios']
 
+def ccts_en_mayusculas(GET) :
+    """
+    """
+    for parametro in GET :
+        if re.search("^cct\d+", parametro) :
+            # Se encontró un cct como parámetro
+            GET[parametro] = GET[parametro].upper()
+
+    return GET
+
+def delete_repeated_values(GET) :
+    """
+    """
+    valores = set()
+    
+    llaves = list(GET.keys())
+    for llave in llaves :
+        valor = GET[llave]
+        if valor in valores :
+            GET.pop(llave)
+        valores.add(valor)
+    
+    return GET
+
+def parser_multiples_ccts(GET) :
+    """
+    """
+    # Si el diccionario no contiene al parámetro de múltiples ccts regresar
+    if 'ccts' not in GET :
+        return GET
+    ccts = GET['ccts']
+    
+    # Reemplazar las comas por simbolos de +
+    ccts = ccts.replace('%2C', '+')
+    
+    # Separar los ccts por simbolos de +
+    ccts = ccts.split('+')
+    
+    # Obtener el número de ccts ingresados individualmente
+    ultimo_cct = 0
+    for parametro in GET :
+        if re.search("^cct\d+", parametro) :
+            # Se encontró un cct como parámetro
+            ultimo_cct = max(ultimo_cct, int(parametro[3:]))
+    ultimo_cct += 1
+    
+    # Agregar nuevos ccts como parametros
+    for cct in ccts :
+        # Si el cct se encuentra vacío omitirlo
+        if cct :
+            print("Agregando cct %s" % (cct))
+            GET["cct%d" % (ultimo_cct)] = cct
+            ultimo_cct += 1
+    
+    # Eliminar parámetro de múltiples ccts
+    GET.pop('ccts')
+    
+    return GET
+
 def cargar_parametros(parametros) :
     """
     Función que realiza un parsing de un string para obtener los parámetros que
@@ -41,10 +100,17 @@ def cargar_parametros(parametros) :
     """
     GET = dict()
     
+    # Separar los parámetros individuales
     llave_y_valor = parametros[1:].split('&')
     for item in llave_y_valor :
         llave, valor = item.split('=')
         GET[llave] = valor
+    
+    # Eliminar parámetros sin valor
+    parametros = list(GET.keys())
+    for parametro in parametros :
+        if not GET[parametro] :
+            GET.pop(parametro)
     
     return GET
     
@@ -242,6 +308,16 @@ def display_page(pathname, parametros, data, data_titulo_reporte):
                 
             # Reporte de escuelas
             elif GET['tipo_reporte'] == 'reporte_escuelas' :
+                # Verificar si contiene al parámetro de múltiples escuelas
+                if 'ccts' in GET :
+                    GET = parser_multiples_ccts(GET)
+                
+                # Poner todos los ccts en mayúsculas
+                GET = ccts_en_mayusculas(GET)
+                
+                # Eliminar ccts repetidos
+                GET = delete_repeated_values(GET)
+            
                 GET.pop('tipo_reporte')
                 # Validar parámetros
                 parametros_validos = True

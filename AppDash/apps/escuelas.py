@@ -28,7 +28,7 @@ def generar_input_cct(index, cct = None) :
                 dbc.Input(
                     size = "10",
                     type = "text",
-                    placeholder = "32DJN0494Z",
+                    placeholder = "Ingresa una cct",
                     name = "cct%d" % (index),
                     id = {
                         'type' : "input-cct",
@@ -92,9 +92,37 @@ def cargar_plantilla_formulario(ccts = [], mensaje_error = '') :
     if not input_ccts :
         input_ccts = [generar_input_cct(1)]
     
-    form = html.Form(
+    form = html.Form([
         # Tipo de reporte
-        [dcc.Input(name = "tipo_reporte", value = "reporte_escuelas", type = "hidden")] + 
+        dcc.Input(name = "tipo_reporte", value = "reporte_escuelas", type = "hidden"),
+        # 
+        dbc.Row(
+            dbc.Col(
+                html.H3(
+                    u"Escribe las claves de centro de trabajo separadas por coma o un espacio",
+                    style = {"text-align" : "center", "margin-top" : "2rem", "margin-bottom" : "2rem"}
+                ),
+                md = 6, xs = 12
+            ),
+            justify="center",
+        ),
+        # Input para múltiples ccts
+        dbc.Row(
+            dbc.Col(
+                dbc.Input(
+                    name = 'ccts', placeholder = 'Ingresa múltiples ccts', className = 'form-group'
+                ),
+                md = 5,
+                xs = 7,
+                className = "d-flex justify-content-center"
+            ),
+            justify="center",
+        ),
+        # Ccts individuales
+        html.H3(
+            u"O ingresa las claves del centro de trabajo",
+            style = {"text-align" : "center", "margin-top" : "2rem", "margin-bottom" : "2rem"}
+        )] + 
         input_ccts +
         # Renglón para el botón para agregar una nueva cct
         [dbc.Row([
@@ -149,14 +177,10 @@ def cargar_plantilla_formulario(ccts = [], mensaje_error = '') :
                 html.H1(
                     u"Proyección de matrícula por escuelas de educación básica del estado de Zacatecas",
                     style = {"text-align" : "center", "margin-top" : "3rem", "margin-bottom" : "3rem"}
-                ),
-                html.H3(
-                    u"Ingresa las claves del centro de trabajo",
-                    style = {"text-align" : "center", "margin-top" : "2rem", "margin-bottom" : "2rem"}
                 )] + [
                 html.H4(
                     mensaje_error,
-                    style = {"text-align" : "center", "margin-top" : "2rem", "margin-bottom" : "2rem"}
+                    style = {"text-align" : "center", "margin-top" : "2rem", "margin-bottom" : "2rem", "color": "red"}
                 ) if mensaje_error else ''
                 ],
                 md = 6,
@@ -219,7 +243,7 @@ def validar_cct(blur, cct) :
     
     """
     if blur :
-        ans = cct in cache['escuelas']
+        ans = cct.upper() in cache['escuelas']
         return not ans, ans
     else :
         raise PreventUpdate
