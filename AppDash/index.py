@@ -30,6 +30,15 @@ MUNICIPIOS = cache['municipios']
 
 def ccts_en_mayusculas(GET) :
     """
+    Función que transforma a mayúsculas todas las letras de los ccts que aparecen
+    en el diccionario GET.
+    
+    Args:
+        GET (dict): diccionario que contiene los parámetros de una petición GET.
+            Solo modifica los valores de la llave con formato cct%d.
+            
+    Returns:
+        GET (dict): mismo diccionario pero con los campos de cct%d modificados.
     """
     for parametro in GET :
         if re.search("^cct\d+", parametro) :
@@ -40,6 +49,14 @@ def ccts_en_mayusculas(GET) :
 
 def delete_repeated_values(GET) :
     """
+    Función que elimina las llaves de un diccionario en caso de que el valor que
+    guardan se encuentre repetido.
+    
+    Args:
+        GET (dict): diccionario a eliminar elementos.
+    
+    Returns:
+        GET (dict): mismo diccionario pero con los elementos repetidos eliminados.
     """
     valores = set()
     
@@ -54,8 +71,21 @@ def delete_repeated_values(GET) :
 
 def parser_multiples_ccts(GET) :
     """
+    Función que obtiene de un solo parámetro múltiples ccts que se encuentran
+    separadas por coma o por espacio en un string. 
+    
+    Args:
+        GET (dict): diccionario que contiene los parámetros de una petición GET.
+            Busca por el string en la llave ccts y lo separa en los múltiples
+            ccts que contiene.
+    
+    Returns:
+        GET (dict): mismo diccionario pero con el campo ccts eliminado. En su 
+            lugar contiene múltiples llaves en la forma cct%d, una por cada
+            cct que contenía el parámetro ccts.
     """
-    # Si el diccionario no contiene al parámetro de múltiples ccts regresar
+    # Si el diccionario no contiene al parámetro de múltiples ccts entonces 
+    # regresar de inmediato
     if 'ccts' not in GET :
         return GET
     ccts = GET['ccts']

@@ -130,7 +130,8 @@ def cargar_plantilla_formulario(ccts = [], mensaje_error = '') :
                 dbc.Button(
                     html.I(className = "fas fa-plus-circle"),
                     type = "button",
-                    id = "nueva-escuela-button"
+                    id = "nueva-escuela-button",
+                    color = "success"
                 ),
                 style = {"margin-top" : "1rem", "margin-bottom" : "3rem"},
                 className = "d-flex justify-content-center",

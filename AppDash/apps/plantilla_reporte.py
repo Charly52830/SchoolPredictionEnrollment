@@ -73,7 +73,8 @@ botones_sidebar = dbc.Col([
             id = 'help_button',
             style = {"margin-top" : "1rem"},
         ),
-        href = 'https://github.com/Charly52830/SchoolPredictionEnrollment'
+        href = 'https://github.com/Charly52830/SchoolPredictionEnrollment',
+        target = '_blank'
     )],
 )
 
