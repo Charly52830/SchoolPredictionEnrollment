@@ -78,7 +78,6 @@ def parser_multiples_ccts(GET) :
     for cct in ccts :
         # Si el cct se encuentra vacío omitirlo
         if cct :
-            print("Agregando cct %s" % (cct))
             GET["cct%d" % (ultimo_cct)] = cct
             ultimo_cct += 1
     
@@ -253,7 +252,7 @@ def display_page(pathname, parametros, data, data_titulo_reporte):
     """
     data = data or {'session_active' : False, 'escuelas' : None}
     
-    pagina = '404'
+    pagina = None
     
     if pathname == '/' :
         pagina = layout
@@ -265,8 +264,10 @@ def display_page(pathname, parametros, data, data_titulo_reporte):
         pagina = estado.layout
     # Reporte general
     elif pathname == '/apps/reporte' :
-        # Solicitud de nuevo reporte
+        titulo_reporte = None
+        
         if parametros :
+            # Solicitud de nuevo reporte
             GET = cargar_parametros(parametros)
             
             # Reporte de una región
@@ -298,13 +299,6 @@ def display_page(pathname, parametros, data, data_titulo_reporte):
                     
                     # Ordenar las escuelas
                     data['escuelas'] = ordenar_escuelas(__escuelas)
-                    
-                    pagina = plantilla_reporte.cargar_plantilla_reporte(
-                        contenido = reporte_general.cargar_contenido_reporte_general(
-                            escuelas = ordenar_escuelas(data['escuelas'])
-                        ),
-                        titulo_reporte = titulo_reporte
-                    )
                 
             # Reporte de escuelas
             elif GET['tipo_reporte'] == 'reporte_escuelas' :
@@ -319,11 +313,12 @@ def display_page(pathname, parametros, data, data_titulo_reporte):
                 GET = delete_repeated_values(GET)
             
                 GET.pop('tipo_reporte')
+                
                 # Validar parámetros
                 parametros_validos = True
+                
                 # Validar ccts
                 ccts_invalidos = False
-                
                 ccts = []
                 for llave in GET :
                     # Validar que tenga el formato de un cct seguido de un número
@@ -336,6 +331,7 @@ def display_page(pathname, parametros, data, data_titulo_reporte):
                     
                     # Validar si el cct existe
                     ccts_invalidos |= GET[llave] not in cache['escuelas']
+                    
                 
                 # Si la estructura de los parámetros no es válida regresar 404
                 if not parametros_validos :
@@ -366,11 +362,6 @@ def display_page(pathname, parametros, data, data_titulo_reporte):
                     # Ordenar las escuelas
                     data['escuelas'] = ordenar_escuelas(__escuelas)
                     
-                    pagina = plantilla_reporte.cargar_plantilla_reporte(
-                        contenido = reporte_general.cargar_contenido_reporte_general(
-                            escuelas = ordenar_escuelas(data['escuelas'])
-                        )
-                    )
             # Reporte de municipio
             elif GET['tipo_reporte'] == 'reporte_municipio' :
                 # Validar parámetros
@@ -400,26 +391,38 @@ def display_page(pathname, parametros, data, data_titulo_reporte):
                     
                     # Ordenar las escuelas
                     data['escuelas'] = ordenar_escuelas(__escuelas)
-                    
-                    pagina = plantilla_reporte.cargar_plantilla_reporte(
-                        contenido = reporte_general.cargar_contenido_reporte_general(
-                            escuelas = ordenar_escuelas(data['escuelas'])
-                        ),
-                        titulo_reporte = titulo_reporte
-                    )
                 
         # Solicitud de volver a la página del reporte
         elif data['session_active'] :
             # Obtener el titulo del reporte
             data_titulo_reporte = data_titulo_reporte or {'titulo_reporte': None}
             titulo_reporte = data_titulo_reporte['titulo-reporte']
-            
-            pagina = plantilla_reporte.cargar_plantilla_reporte(
-                contenido = reporte_general.cargar_contenido_reporte_general(
-                    escuelas = ordenar_escuelas(data['escuelas'])
-                ),
-                titulo_reporte = titulo_reporte
-            )
+        
+        # Si se llega en este punto y la pagina sigue siendo None significa que 
+        # todo salió bien. En este punto los datos del reporte se encuentran en
+        # data['escuelas'] y ya se encuentran ordenados
+        if not pagina :
+            # Si el reporte contiene múltiples escuelas cargar el reporte general
+            if len(data['escuelas']) > 1 :
+                pagina = plantilla_reporte.cargar_plantilla_reporte(
+                    contenido = reporte_general.cargar_contenido_reporte_general(
+                        escuelas = data['escuelas']
+                    ),
+                    titulo_reporte = titulo_reporte
+                )
+            # Si el reporte contiene solo una escuela cargar el reporte individual
+            else :
+                cct = list(data['escuelas'])[0]
+                if not titulo_reporte :
+                    titulo_reporte = cct
+                
+                pagina = plantilla_reporte.cargar_plantilla_reporte(
+                    contenido = reporte_individual.cargar_contenido_reporte_individual(
+                        escuelas = data['escuelas'], 
+                        cct = cct
+                    ),
+                    titulo_reporte = titulo_reporte
+                )
     
     # Reporte individual
     elif re.search('^/apps/reporte/32[A-Z]{3}[0-9]{4}[A-Z]{1}', pathname) and data['session_active'] :
@@ -439,6 +442,9 @@ def display_page(pathname, parametros, data, data_titulo_reporte):
                 ),
                 titulo_reporte = titulo_reporte
             )
+    
+    if not pagina :
+        pagina = '404'
     
     return pagina, data
 

@@ -227,6 +227,9 @@ def controlar_botones_de_navegacion(pathname, data) :
     CCTS = list(data['escuelas'].keys())
     
     if pathname == '/apps/reporte' and data['session_active'] :
+        # Caso especial: reporte de una sola escuela
+        if len(CCTS) == 1 :
+            return True, True, "#", "#"
         return True, False, "#", "reporte/%s" % (CCTS[0])
     elif re.search('^/apps/reporte/32[A-Z]{3}[0-9]{4}[A-Z]{1}', pathname) :
         cct = pathname[-10:]

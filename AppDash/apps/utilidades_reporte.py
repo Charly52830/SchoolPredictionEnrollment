@@ -593,14 +593,27 @@ class GeneradorDeGraficas :
                 text = ["%s (%d alumnos)" % (cct, escuelas[cct]["matricula"][-1]) for cct in escuelas_por_nivel["Secundaria"]]
             ))
         
+        # Por defecto el centro del mapa se ubica en Fresnillo, porque es el centro
+        # de Zacatecas
+        lat_center = 23.1719
+        lon_center = -102.861
+        zoom = 5.65
+        
+        # Si el mapa contiene una sola escuela modificar el centro y el zoom
+        if len(escuelas) == 1 :
+            cct = list(escuelas.keys())[0]
+            lat_center = escuelas[cct]['lat']
+            lon_center = escuelas[cct]['lng']
+            zoom = 14
+        
         # Update layout
         mapa.update_layout(
             mapbox_accesstoken = MAPBOX_TOKEN,
             mapbox_style = "light",
             mapbox = {
                 # Centro de Zacatecas
-                'center': go.layout.mapbox.Center(lat = 23.1719, lon = -102.861),
-                'zoom': 5.65
+                'center': go.layout.mapbox.Center(lat = lat_center, lon = lon_center),
+                'zoom': zoom
             },
             title = titulo,
 	        title_font = dict(size = 20),	# Tamaño del titulo

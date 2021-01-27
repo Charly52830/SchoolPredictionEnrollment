@@ -62,11 +62,18 @@ def cargar_contenido_reporte_individual(escuelas, cct) :
         cct = cct,
         es_acf = True
     )
+    
+    # Nota (26/01/2021):
+    # El cálculo del PACF implica tener control sobre el número de lags que tiene
+    # la serie de tiempo. Se comentó el siguiente bloque de código para evitar 
+    # errores de ejecución.
+    """
     correlograma_pacf = GeneradorDeGraficas.generar_correlograma(
         escuelas[cct]['matricula'],
         cct = cct,
         es_acf = False
     )
+    """
     
     mapa = GeneradorDeGraficas.generar_mapa(
         {cct : escuelas[cct]},
