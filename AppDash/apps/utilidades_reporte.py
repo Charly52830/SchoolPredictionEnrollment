@@ -414,8 +414,12 @@ class GeneradorDeGraficas :
         Returns:
             objeto con el layout de la tabla.
         """
+        # Obtener el último año en el que se registraron las series de tiempo
+        ccts = list(escuelas.keys())
+        primer_escuela = escuelas[ccts[0]]
+        anio_actual = primer_escuela['primer_anio'] + len(primer_escuela['matricula'])
+        
         # Cabecera de la tabla
-        anio_actual = date.today().year
         nombre_columnas = [nombre_elementos] + ["%d\n%d" % (anio, anio + 1) for anio in range(anio_actual - 5, anio_actual + 5)]
         cabecera = html.Thead(
             html.Tr([
