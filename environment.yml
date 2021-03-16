@@ -16,4 +16,5 @@ dependencies:
     - pyFTS
     - matplotlib
     - dill
-
+    - pystan
+    - fbprophet
