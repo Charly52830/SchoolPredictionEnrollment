@@ -1,41 +1,30 @@
 /**
- * Función que obtiene los datos concercientes a la ubicación de la escuela,
- * es decir, la latitud, longitud y el municipio en el que se encuentra la escuela.
- *
- * Los datos se obtienen a través de un objeto inmueble conectado al nodo de una escuela
- * en la base de datos.
- *
- * param cct_o_escuela: cct de la escuela (string) u objeto escuela.
- *
- * returns objeto json con 3 datos: latitud, longitud y municipio de la escuela.
+ * Función que devuelve los datos generales de todas las escuelas activas.
+ * 
+ * param forzar_escuelas_inactivas: si es false (por defecto) devuelve solo las
+ *   escuelas activas si es true devuelve los datos de las escuelas incluso si se 
+ *   consideran inactivas.
  */
 
-var escuela = null;
-if(typeof escuela_o_cct === 'string' || escuela_o_cct instanceof String) {
-  var cct = escuela_o_cct;
-  var escuela =  orient.getDatabase().command("SELECT FROM escuela WHERE cct = ?", cct)
-  if(escuela.length == 0)
-      return "Escuela no encontrada";
-
-  escuela = escuela[0].getRecord();
+if(forzar_escuelas_inactivas != null) {
+  if(forzar_escuelas_inactivas === "true" || forzar_escuelas_inactivas === "false")
+    forzar_escuelas_inactivas = (forzar_escuelas_inactivas === "true");
+  else if(!(forzar_escuelas_inactivas === true || forzar_escuelas_inactivas === false))
+    return "No se especificaron correctamente los parámetros de la función";
 }
-else 
-  escuela = escuela_o_cct;
+else
+  forzar_escuelas_inactivas = false;
 
-var edges = escuela.field("out_ubicado_en");
-if(edges == null)
-	return {"lat" : null, "lng" : null, "mun" : null};
-var edge_iterator = edges.iterator();
+// Obtener todas las escuelas
+var escuelas = orient.getDatabase().command("SELECT FROM escuela WHERE servicio2 IN ['PREESCOLAR', 'PRIMARIA', 'SECUNDARIA']");
+var resultado = {};
 
-while(edge_iterator.hasNext()) {
-  var edge = edge_iterator.next();
-  var inmueble = edge.getProperty("in");
-  var latitud = inmueble.getProperty("latitud");
-  var longitud = inmueble.getProperty("longitud");
-  var mun = inmueble.getProperty("municipio");
-  
-  if(latitud != null && longitud != null)
-    return {"lat" : latitud, "lng" : longitud, "mun": mun};
+for(var i = 0; i < escuelas.length; i ++) {
+  var escuela = escuelas[i].getRecord();
+  var cct = escuela.getProperty("cct");
+  var datos_escuela = DatosGeneralesEscuela(escuela, forzar_escuelas_inactivas);
+  if(datos_escuela != "Escuela inactiva")
+  	resultado[cct] = datos_escuela;
 }
 
-return {"lat" : null, "lng" : null, "mun" : null};
+return resultado;

@@ -73,9 +73,9 @@ var capitalizar = function(string) {
 }
 
 if(forzar_inactiva != null) {
-  if(forzar_inactiva == "true" || forzar_inactiva == "false")
+  if(forzar_inactiva === "true" || forzar_inactiva === "false")
     forzar_inactiva = (forzar_inactiva === "true");
-  else
+  else if(!(forzar_inactiva === true || forzar_inactiva === false))
     return "No se especificaron correctamente los parámetros de la función";
 }
 else
@@ -85,7 +85,7 @@ var escuela = null;
 if(typeof escuela_o_cct === 'string' || escuela_o_cct instanceof String) {
   var cct = escuela_o_cct;
   var escuela =  orient.getDatabase().command("SELECT FROM escuela WHERE cct = ?", cct)
-
+  
   if(escuela.length == 0)
       return "Escuela no encontrada";
 
@@ -104,7 +104,7 @@ var nombre_escuela = escuela.getProperty("nombre");
 /* Obtener matrícula de la escuela y obtener el promedio para sustituir los valores
 que tienen cero */
 
-var anios_y_matricula = matriculaEscuela(escuela);
+var anios_y_matricula = MatriculaEscuela(escuela);
 var anios_matricula = anios_y_matricula[0];
 var matricula = anios_y_matricula[1];
 matricula = limpiar_anios_en_cero(anios_matricula, matricula);
@@ -113,7 +113,7 @@ if(!forzar_inactiva && matricula === "Escuela inactiva" || matricula.length == 0
 
 /* Obtener matrícula de la escuela y obtener el promedio para sustituir los valores
 que tienen cero */
-var anios_y_grupos = gruposEscuela(escuela);
+var anios_y_grupos = GruposEscuela(escuela);
 var anios_grupos = anios_y_grupos[0];
 var grupos = anios_y_grupos[1];
 grupos = limpiar_anios_en_cero(anios_grupos, grupos);

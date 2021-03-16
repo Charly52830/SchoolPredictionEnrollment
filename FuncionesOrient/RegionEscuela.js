@@ -29,7 +29,7 @@ if(typeof escuela_o_cct === 'string' || escuela_o_cct instanceof String) {
 else 
   escuela = escuela_o_cct;
 
-var periodos = DiccionarioRegiones(escuela.getProperty("servicio2"));
+var periodos = DiccionarioRegionEscuela(escuela.getProperty("servicio2"));
 
 for(var periodo = periodos.length - 1; periodo >= 0; periodo --) {
   var anio_inicio = periodos[periodo][0];

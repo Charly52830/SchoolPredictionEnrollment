@@ -23,7 +23,7 @@ def actualizar_datos_generales(archivo_credenciales = None, direccion = None) :
     - municipio (str)
     - clave de la región (str)
     
-    Ver FuncionesOrient/DatosEscuela.js y DatosDeTodasLasEscuelas.js para conocer
+    Ver FuncionesOrient/DatosGeneralesEscuela.js y DatosDeTodasLasEscuelas.js para conocer
     cómo se obtienen los datos de la base de datos.
     
     Args:
@@ -53,7 +53,7 @@ def actualizar_datos_generales(archivo_credenciales = None, direccion = None) :
         password = getpass.getpass()
     
     # Editar aquí la dirección por defecto en caso de que cambie    
-    direccion = direccion or 'http://e.seduzac.microbit.com:2480/function/fution1_1/DatosDeTodasLasEscuelas'
+    direccion = direccion or 'https://orientdb.k8.seduzac.gob.mx/function/911/DatosDeTodasLasEscuelas'
     
     try :
         print("Dirección de consulta:")
@@ -133,7 +133,7 @@ def informacion() :
         
         Ejemplo de uso:
         
-        $ python3.6 UpdateScript.py actualizar_datos_generales archivo_credenciales="credenciales.json" direccion="http://e.seduzac.microbit.com:2480/function/fution1_1/DatosDeTodasLasEscuelas"
+        $ python3.6 UpdateScript.py actualizar_datos_generales archivo_credenciales="credenciales.json" direccion="https://orientdb.k8.seduzac.gob.mx/function/911/DatosDeTodasLasEscuelas"
 
     actualizar_proyeccion :
         
