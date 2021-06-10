@@ -38,6 +38,7 @@ class TestResult :
                 riesgo.
         """
         
+        self.groups = groups
         self.metricas = []
         for i in range(prediction.shape[0]) :
             tmp_pred = prediction[i]
@@ -65,6 +66,7 @@ class TestResult :
         m = Y.shape[0] * Y.shape[1]
         self.Y_hat = np.reshape(prediction.T, m)
         self.Y = np.reshape(Y.T, m)
+        self.groups = groups
 
 class Model :
     """Clase Modelo que sirve como interfaz para la predicción de distintos
