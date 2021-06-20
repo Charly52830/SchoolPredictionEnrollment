@@ -121,7 +121,7 @@ def train_individual_ann(data, window_len) :
 	# Asignar el optimizador y la función de costo
 	model.compile(
 		loss = "mse",
-		optimizer = tf.keras.optimizers.SGD(lr = 1e-6, momentum = 0.9)
+		optimizer = tf.keras.optimizers.SGD(learning_rate = 1e-6, momentum = 0.9)
 	)
 	
 	# Asignar un optimizador de la tasa de aprendizaje
