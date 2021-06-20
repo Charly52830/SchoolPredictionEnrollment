@@ -22,7 +22,7 @@ def LoadReport(title, X, Y, prediccion, anios) :
         title (str): titulo del reporte de datapane.
         X (:obj: `numpy.array`): datos reales de prueba.
         Y (:obj: `numpy.array`): datos reales de predicción.
-        prediccion (:obj: `numpy.array`): datos predecidos.
+        prediccion (:obj: `numpy.array`): datos predichos.
         anios (int): número de años que se predijeron.
        
     Returns:
@@ -37,7 +37,7 @@ def LoadReport(title, X, Y, prediccion, anios) :
     
     series = ['Datos de entrenamiento'] * n1
     series += ['Datos de prueba'] * n2
-    series += ['Datos predecidos'] * n3
+    series += ['Datos predichos'] * n3
     
     alumnos = list(X)
     alumnos += (list(X) + list(Y))[-(anios + 1):]
@@ -84,8 +84,8 @@ def LoadScatterPlotEvaluation(Y, Y_hat, prediction_size) :
     
     Args :
         Y (:obj: `numpy.array`): datos reales.
-        Y_hat (:obj: `numpy.array`): datos predecidos.
-        prediction_size (int): número de años predecidos.
+        Y_hat (:obj: `numpy.array`): datos predichos.
+        prediction_size (int): número de años predichos.
     """
     n = int(Y.shape[0] / prediction_size)
     colors = []
@@ -104,7 +104,7 @@ def LoadScatterPlotEvaluation(Y, Y_hat, prediction_size) :
     
     axes_options = {
         'x': dict(label='Valor real (alumnos)'),
-        'y': dict(label='Valor predecido (alumnos)'),
+        'y': dict(label='Valor predicho (alumnos)'),
         'color': dict(label='Año', side='right')
     }
 
@@ -123,7 +123,7 @@ def LoadEvaluationPlot(result, prediction_size, conjunto, modelo) :
     Args:
         result (:obj: `TestResult`): instancia de TestResult con los resultados
             de la evaluación.
-        prediction_size (int): número de años predecidos
+        prediction_size (int): número de años predichos
         conjunto (str): conjunto de datos evaluado.
         modelo (str): método de predicción utilizado.
     """
@@ -145,7 +145,7 @@ def LoadEvaluationPlot(result, prediction_size, conjunto, modelo) :
     colors = np.array(colors * n)
 
     fig = plt.figure(
-        title = 'Predicción de matrícula escolar en %s utilizando %s' % (conjunto, modelo), 
+        title = 'Proyección de matrícula escolar en %s utilizando %s' % (conjunto, modelo), 
         legend_location = 'top-left', 
         fig_margin = dict(top = 50, bottom = 70, left = 100, right = 100)
     )
@@ -154,7 +154,7 @@ def LoadEvaluationPlot(result, prediction_size, conjunto, modelo) :
 
     axes_options = {
         'x': dict(label='Valor real (alumnos)'),
-        'y': dict(label='Valor predecido (alumnos)'),
+        'y': dict(label='Valor predicho (alumnos)'),
         'color': dict(label='Año', side='right')
     }
 
@@ -175,7 +175,7 @@ def LoadEvaluationPlot(result, prediction_size, conjunto, modelo) :
 
 def LoadHTMLTable(metricas, modelo) :
     """Carga el código HTML necesario para mostrar debajo de la celda una gráfica
-    que contiene las métricas de evaluación por año predecido.
+    que contiene las métricas de evaluación por año predicho.
     
     Args:
         metricas (list): lista bidimensional con las métricas de evaluación por
@@ -219,7 +219,7 @@ def LoadHTMLTable(metricas, modelo) :
         <table style="border: 1px solid black; border-collapse: collapse;">
             <tr>
                 <th rowspan='3' style="text-align:center">
-                    Modelo
+                    Método
                 </th>
                 %s
             </tr>

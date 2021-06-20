@@ -17,4 +17,4 @@ dependencies:
     - matplotlib
     - dill
     - pystan
-    - fbprophet
+    - prophet
