@@ -90,7 +90,7 @@ posthog==1.4.1
 prometheus-client==0.11.0
 prompt-toolkit==3.0.19
 prophet==1.0.1
-protobuf==3.17.3
+protobuf==3.18.3
 ptyprocess==0.7.0
 pyarrow==3.0.0
 pyasn1==0.4.8
